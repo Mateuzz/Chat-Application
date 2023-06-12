@@ -1,0 +1,3 @@
+[submodule "vendor/vendor/nuklear"]
+	path = vendor/vendor/nuklear
+	url = git@github.com:vurtun/nuklear.git
