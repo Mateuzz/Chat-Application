@@ -36,6 +36,7 @@ workspace "chat"
     project "main"
         -- kind "WindowedApp"
         kind "ConsoleApp"
+        pchheader "vendor/nuklear/nuklear.h"
         files {"src/**.c", "src/**.h"}
         includedirs {"src/", "vendor/"}
         targetname "main"
