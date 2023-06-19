@@ -32,13 +32,12 @@ workspace "chat"
         architecture "x86"
 
     filter {}
+        libdirs {"lib"}
+        links {"SDL2", "OpenGL", "GL", "GLEW", "m", "GLU"}
 
     project "main"
-        kind "WindowedApp"
-        -- kind "ConsoleApp"
-        pchheader "vendor/nuklear/nuklear.h"
+        -- kind "WindowedApp"
+        kind "ConsoleApp"
         files {"src/**.c", "src/**.h"}
         includedirs {"src/", "vendor/"}
-        links {"SDL2", "SDL2main"}
-        libdirs {"lib"}
         targetname "main"
