@@ -65,6 +65,13 @@ int main(void)
 
     ctx = nk_sdl_init(window);
 
+    {
+        struct nk_font_atlas *atlas;
+        nk_sdl_font_stash_begin(&atlas);
+        nk_sdl_font_stash_end();
+    }
+
+
     bg.r = 0.10f, bg.g = 0.18f, bg.b = 0.24f, bg.a = 1.0f;
     while (running)
     {
@@ -76,7 +83,7 @@ int main(void)
             nk_sdl_handle_event(&evt);
         } nk_input_end(ctx);
 
-        if (nk_begin(ctx, "Demo", nk_rect(50, 50, 230, 250),
+        if (nk_begin(ctx, "Demo", nk_rect(50, 50, 230, 250),//Começa o front
             NK_WINDOW_BORDER|NK_WINDOW_MOVABLE|NK_WINDOW_SCALABLE|
             NK_WINDOW_MINIMIZABLE|NK_WINDOW_TITLE))
         {
@@ -106,6 +113,8 @@ int main(void)
                 bg.a = nk_propertyf(ctx, "#A:", 0, bg.a, 1.0f, 0.01f,0.005f);
                 nk_combo_end(ctx);
             }
+
+            
         }
         nk_end(ctx);
 
@@ -124,6 +133,7 @@ cleanup:
     SDL_DestroyWindow(window);
     SDL_Quit();
     return 0;
+
 }
 
 
