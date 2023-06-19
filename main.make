@@ -26,7 +26,7 @@ INCLUDES += -Isrc -Ivendor
 FORCE_INCLUDE +=
 ALL_CPPFLAGS += $(CPPFLAGS) -MD -MP $(DEFINES) $(INCLUDES)
 ALL_RESFLAGS += $(RESFLAGS) $(DEFINES) $(INCLUDES)
-LIBS +=
+LIBS += -lSDL2 -lSDL2main
 LDDEPS +=
 LINKCMD = $(CC) -o "$@" $(OBJECTS) $(RESOURCES) $(ALL_LDFLAGS) $(LIBS)
 define PREBUILDCMDS
@@ -43,7 +43,7 @@ OBJDIR = obj/Linux64/Debug
 DEFINES += -DDEBUG
 ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -m64 -g -Wall -W -Wextra
 ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m64 -g -Wall -W -Wextra
-ALL_LDFLAGS += $(LDFLAGS) -L/usr/lib64 -m64
+ALL_LDFLAGS += $(LDFLAGS) -Llib -L/usr/lib64 -m64
 
 else ifeq ($(config),debug_linux32)
 TARGETDIR = bin
@@ -52,7 +52,7 @@ OBJDIR = obj/Linux32/Debug
 DEFINES += -DDEBUG
 ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -m32 -g -Wall -W -Wextra
 ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m32 -g -Wall -W -Wextra
-ALL_LDFLAGS += $(LDFLAGS) -L/usr/lib32 -m32
+ALL_LDFLAGS += $(LDFLAGS) -Llib -L/usr/lib32 -m32
 
 else ifeq ($(config),debug_win64)
 TARGETDIR = bin
@@ -61,7 +61,7 @@ OBJDIR = obj/Win64/Debug
 DEFINES += -DDEBUG
 ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -m64 -g -Wall -W -Wextra
 ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m64 -g -Wall -W -Wextra
-ALL_LDFLAGS += $(LDFLAGS) -L/usr/lib64 -m64
+ALL_LDFLAGS += $(LDFLAGS) -Llib -L/usr/lib64 -m64 -mwindows
 
 else ifeq ($(config),debug_win32)
 TARGETDIR = bin
@@ -70,7 +70,7 @@ OBJDIR = obj/Win32/Debug
 DEFINES += -DDEBUG
 ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -m32 -g -Wall -W -Wextra
 ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m32 -g -Wall -W -Wextra
-ALL_LDFLAGS += $(LDFLAGS) -L/usr/lib32 -m32
+ALL_LDFLAGS += $(LDFLAGS) -Llib -L/usr/lib32 -m32 -mwindows
 
 else ifeq ($(config),release_linux64)
 TARGETDIR = bin
@@ -79,7 +79,7 @@ OBJDIR = obj/Linux64/Release
 DEFINES += -DRELEASE
 ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -m64 -O2 -Wall -W -Wextra
 ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m64 -O2 -Wall -W -Wextra
-ALL_LDFLAGS += $(LDFLAGS) -L/usr/lib64 -m64 -s
+ALL_LDFLAGS += $(LDFLAGS) -Llib -L/usr/lib64 -m64 -s
 
 else ifeq ($(config),release_linux32)
 TARGETDIR = bin
@@ -88,7 +88,7 @@ OBJDIR = obj/Linux32/Release
 DEFINES += -DRELEASE
 ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -m32 -O2 -Wall -W -Wextra
 ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m32 -O2 -Wall -W -Wextra
-ALL_LDFLAGS += $(LDFLAGS) -L/usr/lib32 -m32 -s
+ALL_LDFLAGS += $(LDFLAGS) -Llib -L/usr/lib32 -m32 -s
 
 else ifeq ($(config),release_win64)
 TARGETDIR = bin
@@ -97,7 +97,7 @@ OBJDIR = obj/Win64/Release
 DEFINES += -DRELEASE
 ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -m64 -O2 -Wall -W -Wextra
 ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m64 -O2 -Wall -W -Wextra
-ALL_LDFLAGS += $(LDFLAGS) -L/usr/lib64 -m64 -s
+ALL_LDFLAGS += $(LDFLAGS) -Llib -L/usr/lib64 -m64 -mwindows -s
 
 else ifeq ($(config),release_win32)
 TARGETDIR = bin
@@ -106,7 +106,7 @@ OBJDIR = obj/Win32/Release
 DEFINES += -DRELEASE
 ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -m32 -O2 -Wall -W -Wextra
 ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m32 -O2 -Wall -W -Wextra
-ALL_LDFLAGS += $(LDFLAGS) -L/usr/lib32 -m32 -s
+ALL_LDFLAGS += $(LDFLAGS) -Llib -L/usr/lib32 -m32 -mwindows -s
 
 endif
 

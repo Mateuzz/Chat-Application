@@ -34,9 +34,11 @@ workspace "chat"
     filter {}
 
     project "main"
-        -- kind "WindowedApp"
-        kind "ConsoleApp"
+        kind "WindowedApp"
+        -- kind "ConsoleApp"
         pchheader "vendor/nuklear/nuklear.h"
         files {"src/**.c", "src/**.h"}
         includedirs {"src/", "vendor/"}
+        links {"SDL2", "SDL2main"}
+        libdirs {"lib"}
         targetname "main"
