@@ -1,0 +1,32 @@
+Socket em grupo
+
+Servidor (dono do grupo)
+    Aceita novos membros 
+        salva num arquivos os membros cadastrados + senha
+    Aceita membro existente para conversa
+        autenticando no arquivo
+    Recebe mensagem e manda para todos os clientes
+    Fecha conexao do chat
+    Deleta o grupo e fecha conexao
+
+    + muda nome do grupo
+    ++ salvar conversas num arquivo
+
+Cliente
+    Solicita entrada num grupo (com usuario e senha) e ip do grupo
+        Salva ip dos grupos pertencentes num arquivo
+    Manda mensagem no grupo
+    Fecha conexao do chat
+    Sai do grupo 
+        Deleta entrada do grupo no arquivo
+        Servidor deleta entrada no seu arquivo também
+    
+    + muda nome de usuario
+
+
+FLOW
+    1 - Cliente manda solicitacao de entrar num grupo
+    2 - Servidor envia resposta que analise está em andamento
+        3 - Servidor Rejeita Entrada
+    3 - Servidor confirma entrada
+    4 - Cliente entra no chat e pode escrever suas mensagens
