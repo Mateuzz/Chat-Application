@@ -6,8 +6,8 @@ void draw_gui(struct nk_context *ctx)
 
     if (nk_begin(ctx,
                 "Demo",
-                nk_rect(50, 50, 230, 250), // Começa o front NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE |
-                NK_WINDOW_MINIMIZABLE | NK_WINDOW_TITLE)) {
+                nk_rect(50, 50, 230, 250),
+                NK_WINDOW_MINIMIZABLE | NK_WINDOW_TITLE | NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE)) {
         enum { EASY, HARD };
         static int op = EASY;
         static int property = 20;

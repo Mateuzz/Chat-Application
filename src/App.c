@@ -54,7 +54,6 @@ void app_run(App *app)
 {
     bool running = true;
     struct nk_context *ctx = app->ctx;
-    struct nk_colorf bg = {0.8f, 0.0f, 0.1f, 1.0f};
 
     while (running) {
         /* Input */
