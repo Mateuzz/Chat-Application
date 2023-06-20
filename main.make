@@ -118,8 +118,10 @@ GENERATED :=
 OBJECTS :=
 
 GENERATED += $(OBJDIR)/App.o
+GENERATED += $(OBJDIR)/layout.o
 GENERATED += $(OBJDIR)/main.o
 OBJECTS += $(OBJDIR)/App.o
+OBJECTS += $(OBJDIR)/layout.o
 OBJECTS += $(OBJDIR)/main.o
 
 # Rules
@@ -185,6 +187,9 @@ endif
 # #############################################
 
 $(OBJDIR)/App.o: src/App.c
+	@echo "$(notdir $<)"
+	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
+$(OBJDIR)/layout.o: src/gui/layout.c
 	@echo "$(notdir $<)"
 	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 $(OBJDIR)/main.o: src/main.c

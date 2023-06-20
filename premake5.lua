@@ -39,6 +39,5 @@ workspace "chat"
         -- kind "WindowedApp"
         kind "ConsoleApp"
         files {"src/**.c", "src/**.h"}
-        pchheader {"src/App.h"}
         includedirs {"src/", "vendor/"}
         targetname "main"
