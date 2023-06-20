@@ -2,3 +2,5 @@
 .vimspector.json 
 compile_flags.txt
 tags
+bin
+obj
