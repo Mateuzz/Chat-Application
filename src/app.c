@@ -1,7 +1,7 @@
 #define WINDOW_WIDTH 1200
 #define WINDOW_HEIGHT 800
 
-#include "Interface.h"
+#include "panels.h"
 
 typedef enum InputResult {
     INPUT_RESULT_NONE,

@@ -1,4 +1,4 @@
-#include "Interface.h"
+#include "panels.h"
 #include "chat_server.h"
 
 // preciso da porta em que vai criar

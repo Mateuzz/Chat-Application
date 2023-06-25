@@ -117,20 +117,20 @@ endif
 GENERATED :=
 OBJECTS :=
 
-GENERATED += $(OBJDIR)/App.o
-GENERATED += $(OBJDIR)/Interface.o
+GENERATED += $(OBJDIR)/app.o
 GENERATED += $(OBJDIR)/chat_client.o
 GENERATED += $(OBJDIR)/chat_server.o
 GENERATED += $(OBJDIR)/main.o
 GENERATED += $(OBJDIR)/network.o
 GENERATED += $(OBJDIR)/nuklear_common.o
-OBJECTS += $(OBJDIR)/App.o
-OBJECTS += $(OBJDIR)/Interface.o
+GENERATED += $(OBJDIR)/panels.o
+OBJECTS += $(OBJDIR)/app.o
 OBJECTS += $(OBJDIR)/chat_client.o
 OBJECTS += $(OBJDIR)/chat_server.o
 OBJECTS += $(OBJDIR)/main.o
 OBJECTS += $(OBJDIR)/network.o
 OBJECTS += $(OBJDIR)/nuklear_common.o
+OBJECTS += $(OBJDIR)/panels.o
 
 # Rules
 # #############################################
@@ -194,10 +194,7 @@ endif
 # File Rules
 # #############################################
 
-$(OBJDIR)/App.o: src/App.c
-	@echo "$(notdir $<)"
-	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
-$(OBJDIR)/Interface.o: src/Interface.c
+$(OBJDIR)/app.o: src/app.c
 	@echo "$(notdir $<)"
 	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 $(OBJDIR)/chat_client.o: src/chat_client.c
@@ -213,6 +210,9 @@ $(OBJDIR)/network.o: src/network.c
 	@echo "$(notdir $<)"
 	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 $(OBJDIR)/nuklear_common.o: src/nuklear_common.c
+	@echo "$(notdir $<)"
+	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
+$(OBJDIR)/panels.o: src/panels.c
 	@echo "$(notdir $<)"
 	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 
