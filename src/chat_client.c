@@ -12,7 +12,6 @@ ChatUser *chat_user_create(void)
 int chat_user_connect(ChatUser *user, int port, const char *ip)
 {
     Socket *socket = &user->socket;
-    ssize_t bytes_read = 0;
     if (!init_client(socket, AF_INET, SOCK_STREAM, port, ip))
         return CHAT_USER_ERROR_CONNECT;
 
@@ -20,6 +19,8 @@ int chat_user_connect(ChatUser *user, int port, const char *ip)
 
     user->status =  CHAT_USER_STATUS_NON_CONFIRMED;
     user->bytes_read = 0;
+    strncpy(user->chat_ip_address, ip, sizeof(user->chat_ip_address));
+    user->chat_port = port;
 
     PRINT_DEBUG("ChatUser: Conexao com grupo do chat iniciada\n");
 

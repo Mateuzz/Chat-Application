@@ -22,6 +22,8 @@ typedef struct ChatUser {
     ChatMessage in;
     ChatMessage out;
     ssize_t bytes_read;
+    char chat_ip_address[20];
+    int chat_port;
 } ChatUser;
 
 ChatUser *chat_user_create(void);

@@ -19,6 +19,9 @@ typedef struct ChatMessage {
         CHAT_MESSAGE_SERVER_ENDED,
         CHAT_MESSAGE_SERVER_CHECK_ALIVE,
     } type;
-    char username[USERNAME_MAX];
-    char msg[MESSAGE_MAX];
+    char username[USERNAME_MAX + 1];
+    char msg[MESSAGE_MAX + 1];
+    size_t msg_len;
 } ChatMessage;
+
+ssize_t chat_message_send(Socket *socket, enum Type type, const char* value, size_t len);

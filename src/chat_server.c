@@ -14,7 +14,6 @@ process_client_message(ChatClient *client, ChatClient *clients, int clients_coun
             if (strcmp(client->message_buffer.username, clients[i].username) == 0) {
                 PRINT_DEBUG("Server: Requisição negada: %s Tentando mudar para nome do cliente %s\n", client->username, clients[i].username);
             }
-        break;
 
         PRINT_DEBUG("Server: Username do cliente %s mudado para %s\n", client->username, client->message_buffer.username);
         strcpy(client->username, client->message_buffer.username);
@@ -24,6 +23,7 @@ process_client_message(ChatClient *client, ChatClient *clients, int clients_coun
         PRINT_DEBUG("Server: %s enviou: %s\n",
                     client->username,
                     client->message_buffer.msg);
+
         strcpy(client->message_buffer.username, client->username);
         for (int i = 0; i < clients_count; ++i) {
             send(clients[i].fd, &client->message_buffer, sizeof(client->message_buffer), 0);
@@ -95,11 +95,13 @@ void chat_server_update(ChatServer *chat)
                     send(client->fd, &g_message_out, sizeof(ChatMessage), 0);
                     client->status = CLIENT_STATUS_TIMEOUT_WAITING;
                 }
+                break;
             case CLIENT_STATUS_TIMEOUT_WAITING:
                 if (clock() - client->timeout_start >= TIMEOUT_BAN_USER) {
                     PRINT_DEBUG("Server: Client %s deu timeout final, banindo\n", client->username);
                     chat_server_ban_user(chat, i);
                 }
+                break;
 
             case CLIENT_STATUS_INACTIVE:
                 break;
@@ -110,6 +112,7 @@ void chat_server_update(ChatServer *chat)
             if (client->current_message_bytes_read == sizeof(client->message_buffer)) {
                 client->current_message_bytes_read = 0;
                 process_client_message(client, clients, clients_count);
+                message_list_add(&chat->received, &client->message_buffer);
             }
         }
     }
@@ -164,6 +167,8 @@ ChatServer *chat_server_create(int port)
     signal(SIGPIPE, SIG_IGN);
     fcntl(chat->socket.fd, F_SETFL, O_NONBLOCK);
 
+    message_list_init(&chat->received, 200);
+
     PRINT_DEBUG("Server: Server de porta %d criado\n", chat->port);
 
     return chat;
@@ -176,6 +181,36 @@ void chat_server_delete(ChatServer *chat)
     for (int i = 0; i < chat->clients_count; ++i) {
         send(chat->clients[i].fd, &out, sizeof(out), 0);
     }
+    message_list_deinit(&chat->received);
     close_socket(&chat->socket);
     free(chat);
+}
+
+int message_list_init(MessageList *list, int max_messages)
+{
+    if (!(list->messages = malloc(sizeof(ChatMessage) * max_messages)))
+        return -1;
+    list->max = max_messages;
+    list->count = 0;
+    return 0;
+}
+
+void message_list_deinit(MessageList *list)
+{
+    free(list->messages);
+    list->messages = NULL;
+}
+
+int message_list_add(MessageList *list, const ChatMessage *message)
+{
+    if (list->count > list->max) {
+        list->max *= 2;
+        if (!(list->messages = realloc(list->messages, sizeof(ChatMessage) * list->max))) {
+            return -1;
+        }
+    }
+
+    list->messages[list->count++] = *message;
+
+    return 0;
 }

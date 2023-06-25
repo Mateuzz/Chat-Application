@@ -1,11 +1,13 @@
 #include "app.h"
 
-/* /*! TODO: 
+/*  TODO: 
  *  ADicionar painel de adicionar mensagem
+ *  dar opcao de disconnect
+ *  mensagens tanto do cliente como do server devem ter um limite uma hora (com wrap)
  *  permitir mudar nome de usuario
  *  permitir banir usuario
  *  colocar popup em caso de erro em criar server ou join server
- *  dar opcao de disconnect
+ *  criar janela para dono do servidor
  */
 
 int main(void)

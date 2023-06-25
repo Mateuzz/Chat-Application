@@ -119,6 +119,7 @@ OBJECTS :=
 
 GENERATED += $(OBJDIR)/app.o
 GENERATED += $(OBJDIR)/chat_client.o
+GENERATED += $(OBJDIR)/chat_common.o
 GENERATED += $(OBJDIR)/chat_server.o
 GENERATED += $(OBJDIR)/main.o
 GENERATED += $(OBJDIR)/network.o
@@ -126,6 +127,7 @@ GENERATED += $(OBJDIR)/nuklear_common.o
 GENERATED += $(OBJDIR)/panels.o
 OBJECTS += $(OBJDIR)/app.o
 OBJECTS += $(OBJDIR)/chat_client.o
+OBJECTS += $(OBJDIR)/chat_common.o
 OBJECTS += $(OBJDIR)/chat_server.o
 OBJECTS += $(OBJDIR)/main.o
 OBJECTS += $(OBJDIR)/network.o
@@ -198,6 +200,9 @@ $(OBJDIR)/app.o: src/app.c
 	@echo "$(notdir $<)"
 	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 $(OBJDIR)/chat_client.o: src/chat_client.c
+	@echo "$(notdir $<)"
+	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
+$(OBJDIR)/chat_common.o: src/chat_common.c
 	@echo "$(notdir $<)"
 	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 $(OBJDIR)/chat_server.o: src/chat_server.c

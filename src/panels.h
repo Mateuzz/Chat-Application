@@ -6,17 +6,6 @@
 #include "nuklear_common.h"
 #include <bits/pthreadtypes.h>
 
-typedef struct WindowChatMessage {
-    char username[USERNAME_MAX];
-    char message[MESSAGE_MAX];
-} WindowChatMessage;
-
-typedef struct MessageList {
-    WindowChatMessage *texts;
-    size_t messages_count;
-    size_t messages_max;
-} MessageList;
-
 typedef struct ChatUserWindow {
     ChatUser *chat_user;
     MessageList messages;
@@ -43,5 +32,3 @@ void server_window_deinit(ChatServerWindow *window);
 void server_window_draw(struct nk_context *ctx, ChatServerWindow *window);
 void user_window_draw(struct nk_context *ctx, ChatUserWindow *window);
 
-int message_list_add(MessageList* list, const ChatMessage *message);
-void message_list_init(MessageList *list, int max_messages);
