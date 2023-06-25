@@ -26,20 +26,18 @@ int main(void)
     int i = 0;
     while (i < 20) {
         while (chat_user_process_messages(user) > 0) {
+            if (chat_user_message_ready(user) == CHAT_USER_MESSAGE_READY)  {
+                ChatMessage *in = get_next_message(user);
 
-        }
+                switch (in->type) {
+                case CHAT_MESSAGE_CLIENT_MESSAGE:
+                    printf("Alguem mandou uma mensagen\n");
+                    printf("%s: %s\n", in->username, in->msg);
+                    break;
 
-        if (chat_user_message_ready(user) == CHAT_USER_MESSAGE_READY)  {
-            ChatMessage *in = get_next_message(user);
-
-            switch (in->type) {
-            case CHAT_MESSAGE_CLIENT_MESSAGE:
-                printf("Alguem mandou uma mensagen\n");
-                printf("%s: %s\n", in->username, in->msg);
-                break;
-
-            default:
-                printf("Estranho\n");
+                default:
+                    printf("Estranho\n");
+                }
             }
         }
 

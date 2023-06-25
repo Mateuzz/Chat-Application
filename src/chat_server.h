@@ -3,7 +3,7 @@
 #include "chat_common.h"
 
 #define MAX_CONNECTIONS 30
-#define TIMEOUT_MAX CLOCK_TO_SECONDS(60)
+#define TIMEOUT_MAX CLOCK_TO_SECONDS(10)
 
 typedef struct ChatClient {
     int fd;

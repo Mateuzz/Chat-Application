@@ -18,17 +18,10 @@ int chat_user_connect(ChatUser *user, int port, const char *ip)
 
     fcntl(socket->fd, F_SETFL, O_NONBLOCK);
 
-    while (bytes_read < sizeof(user->in)) {
-        read_socket_message(socket->fd, &user->in, &bytes_read, sizeof(user->in));
-    }
+    user->bytes_read = 0;
+    user->status = CHAT_USER_STATUS_NON_CONFIRMED;
 
-    if (user->in.type == CHAT_MESSAGE_SERVER_ACCEPTED) {
-        user->status = CHAT_USER_STATUS_CONNECTED;
-        strcpy(user->username, user->in.username);
-        return CHAT_USER_SUCESS;
-    }
-
-    return CHAT_USER_ERROR_NON_ACCEPTED;
+    return CHAT_USER_SUCESS;
 }
 
 int chat_user_disconnect(ChatUser *user)

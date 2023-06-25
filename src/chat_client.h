@@ -14,6 +14,7 @@
 typedef struct ChatUser {
     enum ChatUserStatus {
         CHAT_USER_STATUS_DISCONNECTED,
+        CHAT_USER_STATUS_NON_CONFIRMED,
         CHAT_USER_STATUS_CONNECTED,
     } status;
     Socket socket;

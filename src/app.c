@@ -1,7 +1,17 @@
+#include "app.h"
+#include "panels.h"
+
 #define WINDOW_WIDTH 1200
 #define WINDOW_HEIGHT 800
-
-#include "panels.h"
+struct App {
+    SDL_Window *window;
+    SDL_GLContext gl_context;
+    int win_width;
+    int win_height;
+    struct nk_context *ctx;
+    ChatUserWindow chat_user_window;
+    ChatServerWindow chat_server_window;
+};
 
 typedef enum InputResult {
     INPUT_RESULT_NONE,
@@ -32,6 +42,67 @@ static void render_buffer(App *app)
     SDL_GL_SwapWindow(app->window);
 }
 
+static void process_server(App *app)
+{
+    ChatServerWindow* window = &app->chat_server_window;
+
+    if (window->chat_server) {
+        chat_server_update(window->chat_server);
+    }
+    server_window_draw(app->ctx, window);
+}
+
+static void process_user(App *app)
+{
+    ChatUserWindow* window = &app->chat_user_window;
+    ChatUser* user = window->chat_user;
+
+    switch (user->status) {
+    case CHAT_USER_STATUS_DISCONNECTED:
+        break;
+
+    case CHAT_USER_STATUS_NON_CONFIRMED:
+        while (chat_user_process_messages(user) > 0) {
+            if (chat_user_message_ready(user) == CHAT_USER_MESSAGE_READY) {
+                ChatMessage *msg = get_next_message(user);
+
+                switch (msg->type) {
+                case CHAT_MESSAGE_SERVER_ACCEPTED:
+                    strcpy(user->username, msg->username);
+                    user->status = CHAT_USER_STATUS_CONNECTED;
+                    break;
+
+                case CHAT_MESSAGE_SERVER_REFUSED:
+                    user->status = CHAT_USER_STATUS_DISCONNECTED;
+                    break;
+                }
+            }
+        }
+        break;
+
+    case CHAT_USER_STATUS_CONNECTED:
+        while (chat_user_process_messages(user) > 0) {
+            if (chat_user_message_ready(user) == CHAT_USER_MESSAGE_READY) {
+                ChatMessage *msg = get_next_message(user);
+
+                switch (msg->type) {
+                case CHAT_MESSAGE_CLIENT_MESSAGE:
+                    user_window_add_message(window, msg);
+                    break;
+
+                case CHAT_MESSAGE_SERVER_BAN:
+                case CHAT_MESSAGE_SERVER_ENDED:
+                    user->status = CHAT_USER_STATUS_DISCONNECTED;
+                    break;
+                }
+            }
+        }
+        break;
+    }
+
+    user_window_draw(app->ctx, &app->chat_user_window); 
+}
+
 App *app_create()
 {
     App *app = malloc(sizeof(App));
@@ -40,8 +111,6 @@ App *app_create()
 
     app->window = NULL;
     app->gl_context = NULL;
-    app->chat_server = NULL;
-    app->chat_user = NULL;
 
     SDL_SetHint(SDL_HINT_VIDEO_HIGHDPI_DISABLED, "0");
     SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_EVENTS);
@@ -82,6 +151,9 @@ App *app_create()
         nk_sdl_font_stash_end();
     }
 
+    user_window_init(&app->chat_user_window, 200);
+    server_window_init(&app->chat_server_window);
+
     return app;
 
 cleanup:
@@ -102,7 +174,8 @@ void app_run(App *app)
             break;
         }
 
-        draw_server_window(app->ctx, app->chat_server);
+        process_server(app);
+        process_user(app);
 
         render_buffer(app);
     }

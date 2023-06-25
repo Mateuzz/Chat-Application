@@ -1,0 +1,5 @@
+
+// criei server
+// crio processo onde server sobre update
+// o main continua normal
+// se server é deletado, passo mensagem pro child
