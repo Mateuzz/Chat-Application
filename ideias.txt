@@ -88,3 +88,17 @@ messages
         mensagem de texto
     server -> client
         mensagem de alguem
+
+
+janela do servidor
+    criar servidor de chat
+    apos criado
+        encerrar chat
+        banir cliente (pelo nome)
+
+janela do cliente
+    entrar numa conversa
+    apos entrar
+        disconectar da conversa
+        mudar nome
+        enviar mensagem

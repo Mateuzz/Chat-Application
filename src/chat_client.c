@@ -22,9 +22,9 @@ int chat_user_connect(ChatUser *user, int port, const char *ip)
         read_socket_message(socket->fd, &user->in, &bytes_read, sizeof(user->in));
     }
 
-    if (user->in.type == ACCEPTED_CLIENT) {
+    if (user->in.type == CHAT_MESSAGE_SERVER_ACCEPTED) {
         user->status = CHAT_USER_STATUS_CONNECTED;
-        strcpy(user->username, "Convidado");
+        strcpy(user->username, user->in.username);
         return CHAT_USER_SUCESS;
     }
 
@@ -36,7 +36,7 @@ int chat_user_disconnect(ChatUser *user)
     if (user->status == CHAT_USER_STATUS_DISCONNECTED)
         return CHAT_USER_ERROR_DISCONNECTED;
 
-    user->out.type = ENDED_CONNECTION;
+    user->out.type = CHAT_MESSAGE_CLIENT_END_CONNECTION;
     user->status = CHAT_USER_STATUS_DISCONNECTED;
     send(user->socket.fd, &user->out, sizeof(user->out), 0);
     return CHAT_USER_SUCESS;
@@ -48,7 +48,7 @@ ssize_t chat_user_send_message(ChatUser *user, const char *message)
         return CHAT_USER_ERROR_DISCONNECTED;
 
     size_t len = MIN(MESSAGE_MAX, strlen(message));
-    user->out.type = CLIENT_MESSAGE;
+    user->out.type = CHAT_MESSAGE_CLIENT_MESSAGE;
     memcpy(user->out.msg, message, len);
     return send(user->socket.fd, &user->out, sizeof(user->out), 0);
 }
@@ -58,7 +58,7 @@ int chat_user_set_username(ChatUser *user, const char *name)
     if (user->status == CHAT_USER_STATUS_DISCONNECTED)
         return CHAT_USER_ERROR_DISCONNECTED;
     size_t len = MIN(strlen(name), USERNAME_MAX);
-    user->out.type = CLIENT_INFO;
+    user->out.type = CHAT_MESSAGE_CLIENT_CHANGE_INFO;
     memcpy(user->out.username, name, len);
     if (send(user->socket.fd, &user->out, sizeof(user->out), 0) > 0) {
         memcpy(user->username, name, len);
@@ -93,8 +93,6 @@ int chat_user_message_ready(ChatUser *user)
 
 ChatMessage *get_last_message(ChatUser *user)
 {
-    if (user->status == CHAT_USER_STATUS_DISCONNECTED)
-        return NULL;
     user->bytes_read = 0;
     return &user->in;
 }

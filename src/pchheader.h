@@ -10,14 +10,6 @@
 #include <signal.h>
 #include <pthread.h>
 
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
-
-#include <netdb.h>
-
-#include <fcntl.h>
-
 #define SIZE_ARRAY(a) (sizeof(a) / sizeof(a[0]))
 
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
@@ -28,3 +20,6 @@
 #else
     #define PRINT_DEBUG(...)
 #endif
+
+#define CLOCK_TO_MS(c) ((c)*1000)
+#define CLOCK_TO_SECONDS(c) ((c)*1000000)

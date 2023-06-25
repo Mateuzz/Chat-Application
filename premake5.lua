@@ -40,9 +40,9 @@ workspace "chat"
         targetname "main"
 
     project "server"
-        files {"src/demo_server.c", "src/chat_server.c", "src/network.c"}
+        files {"demo/demo_server.c", "src/chat_server.c", "src/network.c"}
         targetname "server"
 
     project "client"
-        files {"src/demo_client.c", "src/chat_client.c", "src/network.c"}
+        files {"demo/demo_client.c", "src/chat_client.c", "src/network.c"}
         targetname "client"

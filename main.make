@@ -121,20 +121,14 @@ GENERATED += $(OBJDIR)/App.o
 GENERATED += $(OBJDIR)/Interface.o
 GENERATED += $(OBJDIR)/chat_client.o
 GENERATED += $(OBJDIR)/chat_server.o
-GENERATED += $(OBJDIR)/demo_client.o
-GENERATED += $(OBJDIR)/demo_server.o
 GENERATED += $(OBJDIR)/main.o
 GENERATED += $(OBJDIR)/network.o
-GENERATED += $(OBJDIR)/teste.o
 OBJECTS += $(OBJDIR)/App.o
 OBJECTS += $(OBJDIR)/Interface.o
 OBJECTS += $(OBJDIR)/chat_client.o
 OBJECTS += $(OBJDIR)/chat_server.o
-OBJECTS += $(OBJDIR)/demo_client.o
-OBJECTS += $(OBJDIR)/demo_server.o
 OBJECTS += $(OBJDIR)/main.o
 OBJECTS += $(OBJDIR)/network.o
-OBJECTS += $(OBJDIR)/teste.o
 
 # Rules
 # #############################################
@@ -210,19 +204,10 @@ $(OBJDIR)/chat_client.o: src/chat_client.c
 $(OBJDIR)/chat_server.o: src/chat_server.c
 	@echo "$(notdir $<)"
 	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
-$(OBJDIR)/demo_client.o: src/demo_client.c
-	@echo "$(notdir $<)"
-	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
-$(OBJDIR)/demo_server.o: src/demo_server.c
-	@echo "$(notdir $<)"
-	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 $(OBJDIR)/main.o: src/main.c
 	@echo "$(notdir $<)"
 	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 $(OBJDIR)/network.o: src/network.c
-	@echo "$(notdir $<)"
-	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
-$(OBJDIR)/teste.o: src/teste.c
 	@echo "$(notdir $<)"
 	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 

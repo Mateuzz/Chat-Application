@@ -1,28 +1,9 @@
 #pragma once
 
-#include "network.h"
+#include "chat_common.h"
 
 #define MAX_CONNECTIONS 30
-
-#define MESSAGE_MAX 300
-#define USERNAME_MAX 50
-
-#define CLOCK_TO_MS(c) ((c)*1000)
-#define CLOCK_TO_SECONDS(c) ((c)*1000000)
 #define TIMEOUT_MAX CLOCK_TO_SECONDS(60)
-
-typedef struct ChatMessage {
-    enum Type {
-        CLIENT_INFO,
-        CLIENT_MESSAGE,
-        ACCEPTED_CLIENT,
-        REFUSED_CLIENT,
-        CHECK_STATUS,
-        ENDED_CONNECTION
-    } type;
-    char username[USERNAME_MAX];
-    char msg[MESSAGE_MAX];
-} ChatMessage;
 
 typedef struct ChatClient {
     int fd;
@@ -46,3 +27,6 @@ typedef struct ChatServer {
 ChatServer *chat_server_create(int port);
 void chat_server_update(ChatServer *chat);
 void chat_server_delete(ChatServer* chat);
+
+int chat_server_ban_user(ChatServer* chat, int user_index);
+int chat_server_get_user_index(ChatServer* chat, const char *name);

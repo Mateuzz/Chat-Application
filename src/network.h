@@ -2,7 +2,13 @@
 
 #include "pchheader.h"
 
-#define LOCAL_HOST_IP "127.0.0.1"
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+
+#include <netdb.h>
+
+#include <fcntl.h>
 
 typedef struct Socket {
     int fd;

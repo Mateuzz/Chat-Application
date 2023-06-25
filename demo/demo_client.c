@@ -38,15 +38,15 @@ int main(void)
         ChatMessage *in = get_last_message(user);
 
         switch (in->type) {
-        case ACCEPTED_CLIENT:
+        case CHAT_MESSAGE_SERVER_ACCEPTED:
             printf("CLiente foi aceito\n");
             break;
 
-        case REFUSED_CLIENT:
+        case CHAT_MESSAGE_SERVER_REFUSED:
             printf("Cliente recusado\n");
             break;
 
-        case CLIENT_MESSAGE:
+        case CHAT_MESSAGE_CLIENT_MESSAGE:
             printf("Alguem mandou uma mensagen\n");
             printf("%s: %s\n", in->username, in->msg);
             break;
@@ -56,6 +56,10 @@ int main(void)
         }
     } else {
         printf("Mensagem nao pronta anda\n");
+    }
+
+    if (chat_user_disconnect(user) == CHAT_USER_SUCESS) {
+        printf("Encerrada conexao com sucesso\n");
     }
 
     chat_user_delete(user);

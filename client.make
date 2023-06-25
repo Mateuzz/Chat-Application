@@ -186,10 +186,10 @@ endif
 # File Rules
 # #############################################
 
-$(OBJDIR)/chat_client.o: src/chat_client.c
+$(OBJDIR)/demo_client.o: demo/demo_client.c
 	@echo "$(notdir $<)"
 	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
-$(OBJDIR)/demo_client.o: src/demo_client.c
+$(OBJDIR)/chat_client.o: src/chat_client.c
 	@echo "$(notdir $<)"
 	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 $(OBJDIR)/network.o: src/network.c
