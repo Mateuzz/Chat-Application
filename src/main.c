@@ -2,12 +2,12 @@
 
 int main(void)
 {
-    App app = {0};
+    App *app = app_create();
 
-    if (app_init(&app))
-        app_run(&app);
-
-    app_delete(&app);
+    if (app) {
+        app_run(app);
+        app_delete(app);
+    }
 
     return 0;
 }

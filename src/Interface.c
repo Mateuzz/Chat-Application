@@ -1,4 +1,4 @@
-#include "layout.h"
+#include "Interface.h"
 
 void draw_gui(struct nk_context *ctx)
 {
@@ -39,6 +39,6 @@ void draw_gui(struct nk_context *ctx)
     }
     nk_end(ctx);
 
-    glClear(GL_COLOR_BUFFER_BIT);
     glClearColor(bg.r, bg.g, bg.b, bg.a);
+    glClear(GL_COLOR_BUFFER_BIT);
 }
