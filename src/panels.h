@@ -11,11 +11,15 @@ typedef struct WindowChatMessage {
     char message[MESSAGE_MAX];
 } WindowChatMessage;
 
-typedef struct ChatUserWindow {
-    ChatUser *chat_user;
-    WindowChatMessage *messages;
+typedef struct MessageList {
+    WindowChatMessage *texts;
     size_t messages_count;
     size_t messages_max;
+} MessageList;
+
+typedef struct ChatUserWindow {
+    ChatUser *chat_user;
+    MessageList messages;
 } ChatUserWindow;
 
 typedef struct ServerThreadArg {
@@ -39,4 +43,5 @@ void server_window_deinit(ChatServerWindow *window);
 void server_window_draw(struct nk_context *ctx, ChatServerWindow *window);
 void user_window_draw(struct nk_context *ctx, ChatUserWindow *window);
 
-int user_window_add_message(ChatUserWindow* window, const ChatMessage *message);
+int message_list_add(MessageList* list, const ChatMessage *message);
+void message_list_init(MessageList *list, int max_messages);

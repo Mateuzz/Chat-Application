@@ -1,5 +1,8 @@
 #include "app.h"
+#include "chat_client.h"
+#include "chat_common.h"
 #include "panels.h"
+#include "pchheader.h"
 
 #define WINDOW_WIDTH 1200
 #define WINDOW_HEIGHT 800
@@ -65,11 +68,13 @@ static void process_user(App *app)
 
                 switch (msg->type) {
                 case CHAT_MESSAGE_SERVER_ACCEPTED:
+                    PRINT_DEBUG("AppUser: Cliente %s foi aceito pelo server\n", msg->username);
                     strcpy(user->username, msg->username);
                     user->status = CHAT_USER_STATUS_CONNECTED;
                     break;
 
                 case CHAT_MESSAGE_SERVER_REFUSED:
+                    PRINT_DEBUG("AppUser: Cliente foi negado pelo server\n", msg->username);
                     user->status = CHAT_USER_STATUS_DISCONNECTED;
                     break;
                 }
@@ -84,11 +89,18 @@ static void process_user(App *app)
 
                 switch (msg->type) {
                 case CHAT_MESSAGE_CLIENT_MESSAGE:
-                    user_window_add_message(window, msg);
+                    PRINT_DEBUG("AppUser: Mensagem do servidor recebida\n");
+                    message_list_add(&window->messages, msg);
+                    break;
+
+                case CHAT_MESSAGE_SERVER_CHECK_ALIVE:
+                    user->out.type = CHAT_MESSAGE_CLIENT_ALIVE;
+                    chat_user_send_message(user);
                     break;
 
                 case CHAT_MESSAGE_SERVER_BAN:
                 case CHAT_MESSAGE_SERVER_ENDED:
+                    PRINT_DEBUG("Appuser: Cliente desconetado ou banido\n");
                     user->status = CHAT_USER_STATUS_DISCONNECTED;
                     break;
                 }
@@ -108,6 +120,7 @@ App *app_create()
 
     app->window = NULL;
     app->gl_context = NULL;
+    app->chat_user_window.chat_user = NULL;
 
     SDL_SetHint(SDL_HINT_VIDEO_HIGHDPI_DISABLED, "0");
     SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_EVENTS);
@@ -148,8 +161,8 @@ App *app_create()
         nk_sdl_font_stash_end();
     }
 
-    user_window_init(&app->chat_user_window, 200);
     server_window_init(&app->chat_server_window);
+    user_window_init(&app->chat_user_window, 200);
 
     return app;
 

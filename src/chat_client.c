@@ -21,6 +21,8 @@ int chat_user_connect(ChatUser *user, int port, const char *ip)
     user->status =  CHAT_USER_STATUS_NON_CONFIRMED;
     user->bytes_read = 0;
 
+    PRINT_DEBUG("ChatUser: Conexao com grupo do chat iniciada\n");
+
     return CHAT_USER_SUCESS;
 }
 

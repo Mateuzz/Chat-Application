@@ -3,7 +3,8 @@
 #include "chat_common.h"
 
 #define MAX_CONNECTIONS 30
-#define TIMEOUT_MAX CLOCK_TO_SECONDS(10)
+#define TIMEOUT_WARN_USER CLOCK_TO_SECONDS(5)
+#define TIMEOUT_BAN_USER CLOCK_TO_SECONDS(12)
 
 typedef struct ChatClient {
     int fd;
@@ -11,8 +12,12 @@ typedef struct ChatClient {
     ssize_t current_message_bytes_read;
     ChatMessage message_buffer;
     char username[USERNAME_MAX];
-    enum ClientStatus { CLIENT_STATUS_ACTIVE, CLIENT_STATUS_INACTIVE } status;
-    bool non_responsing;
+    enum ClientStatus {
+        CLIENT_STATUS_ACTIVE,
+        CLIENT_STATUS_NON_RESPONDING,
+        CLIENT_STATUS_TIMEOUT_WAITING,
+        CLIENT_STATUS_INACTIVE
+    } status;
     clock_t timeout_start;
 } ChatClient;
 
@@ -26,7 +31,7 @@ typedef struct ChatServer {
 
 ChatServer *chat_server_create(int port);
 void chat_server_update(ChatServer *chat);
-void chat_server_delete(ChatServer* chat);
+void chat_server_delete(ChatServer *chat);
 
-int chat_server_ban_user(ChatServer* chat, int user_index);
-int chat_server_get_user_index(ChatServer* chat, const char *name);
+int chat_server_ban_user(ChatServer *chat, int user_index);
+int chat_server_get_user_index(ChatServer *chat, const char *name);

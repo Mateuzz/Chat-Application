@@ -4,39 +4,6 @@
 #include <pthread.h>
 #include <signal.h>
 
-// preciso da porta em que vai criar
-
-void user_window_init(ChatUserWindow *window, int max_messages)
-{
-    window->chat_user = chat_user_create();
-    window->messages_max = max_messages;
-    window->messages_count = 0;
-    window->messages = malloc(sizeof(WindowChatMessage) * max_messages);
-}
-
-void server_window_init(ChatServerWindow *window)
-{
-    window->chat_server = NULL;
-    pthread_mutex_init(&window->arg.lock, NULL);
-}
-
-void user_window_deinit(ChatUserWindow *window)
-{
-    window->messages_max = 0;
-    window->messages_count = 0;
-    chat_user_delete(window->chat_user);
-    free(window->messages);
-}
-
-void server_window_deinit(ChatServerWindow *window)
-{
-    pthread_mutex_destroy(&window->arg.lock);
-    if (window->chat_server) {
-        chat_server_delete(window->chat_server);
-        window->chat_server = NULL;
-    }
-}
-
 static void *thread_server_run(void *arg)
 {
     ServerThreadArg *data = arg;
@@ -53,67 +20,41 @@ static void *thread_server_run(void *arg)
     return NULL;
 }
 
-void server_window_draw(struct nk_context *ctx, ChatServerWindow *window)
+void message_list_init(MessageList *list, int max_messages)
 {
-    static struct nk_colorf bg = {0.05f, 0.05f, 0.09f, 1.0f};
-    static int port = 0;
-    static char buffer_label[500];
-    int w_width = 300;
-    int w_height = 120;
-
-    if (nk_begin(ctx,
-                 "Servidor",
-                 nk_rect(0, 0, w_width, w_height),
-                 NK_WINDOW_MINIMIZABLE | NK_WINDOW_TITLE | NK_WINDOW_BORDER | NK_WINDOW_MOVABLE |
-                     NK_WINDOW_SCALABLE)) {
-        if (window->chat_server) {
-            nk_layout_row_dynamic(ctx, 30, 1);
-            sprintf(buffer_label, "Server running at port %d", port);
-            nk_label(ctx, buffer_label, NK_TEXT_CENTERED);
-
-            nk_layout_row_dynamic(ctx, 30, 1);
-            if (nk_button_label(ctx, "Stop server")) {
-                pthread_mutex_lock(&window->arg.lock);
-                window->arg.running = false;
-                chat_server_delete(window->chat_server);
-                window->chat_server = NULL;
-                pthread_mutex_unlock(&window->arg.lock);
-                pthread_join(window->thread, NULL);
-            }
-        } else {
-            float port_row_ratio[] = {0.5f, 0.5f};
-
-            nk_layout_row(ctx, NK_DYNAMIC, 35, 2, port_row_ratio);
-            nk_property_int(ctx, "Port", 0, &port, 65535, 1, 1);
-            if (nk_button_label(ctx, "Create chat group")) {
-                if ((window->chat_server = chat_server_create(port))) {
-                    window->arg.running = true;
-                    window->arg.chat_server = window->chat_server;
-                    pthread_mutex_unlock(&window->arg.lock);
-                    pthread_create(&window->thread, NULL, thread_server_run, &window->arg);
-                }
-            }
-        }
-    }
-    nk_end(ctx);
-
-    glClearColor(bg.r, bg.g, bg.b, bg.a);
-    glClear(GL_COLOR_BUFFER_BIT);
+    list->messages_max = max_messages;
+    list->messages_count = 0;
+    list->texts = malloc(sizeof(WindowChatMessage) * max_messages);
 }
 
-int user_window_add_message(ChatUserWindow *window, const ChatMessage *message)
+int message_list_add(MessageList *list, const ChatMessage *message)
 {
-    if (window->messages_count > window->messages_max) {
+    if (list->messages_count > list->messages_max) {
         return -1;
     }
 
-    int i = window->messages_count;
+    int i = list->messages_count;
 
-    strcpy(window->messages[i].message, message->msg);
-    strcpy(window->messages[i].username, message->username);
-    ++window->messages_count;
+    strcpy(list->texts[i].message, message->msg);
+    strcpy(list->texts[i].username, message->username);
+    ++list->messages_count;
 
     return 0;
+}
+
+void user_window_init(ChatUserWindow *window, int max_messages)
+{
+    window->chat_user = chat_user_create();
+    message_list_init(&window->messages, max_messages);
+}
+
+void user_window_deinit(ChatUserWindow *window)
+{
+    window->messages.messages_max = 0;
+    window->messages.messages_count = 0;
+    free(window->messages.texts);
+    chat_user_delete(window->chat_user);
+    window->chat_user = NULL;
 }
 
 void user_window_draw(struct nk_context *ctx, ChatUserWindow *window)
@@ -143,4 +84,66 @@ void user_window_draw(struct nk_context *ctx, ChatUserWindow *window)
         }
     }
     nk_end(ctx);
+}
+
+void server_window_init(ChatServerWindow *window)
+{
+    window->chat_server = NULL;
+    pthread_mutex_init(&window->arg.lock, NULL);
+}
+
+void server_window_deinit(ChatServerWindow *window)
+{
+    pthread_mutex_destroy(&window->arg.lock);
+    if (window->chat_server) {
+        chat_server_delete(window->chat_server);
+        window->chat_server = NULL;
+    }
+}
+
+void server_window_draw(struct nk_context *ctx, ChatServerWindow *window)
+{
+    static struct nk_colorf bg = {0.05f, 0.05f, 0.09f, 1.0f};
+    static int port = 0;
+    static char buffer_label[500];
+    int w_width = 300;
+    int w_height = 120;
+
+    if (nk_begin(ctx,
+                 "Servidor",
+                 nk_rect(0, 0, w_width, w_height),
+                 NK_WINDOW_MINIMIZABLE | NK_WINDOW_TITLE | NK_WINDOW_BORDER | NK_WINDOW_MOVABLE |
+                     NK_WINDOW_SCALABLE)) {
+        if (window->chat_server) {
+            nk_layout_row_dynamic(ctx, 30, 1);
+            sprintf(buffer_label, "Server running at port %d", port);
+            nk_label(ctx, buffer_label, NK_TEXT_CENTERED);
+
+            nk_layout_row_dynamic(ctx, 30, 1);
+            if (nk_button_label(ctx, "Stop server")) {
+                pthread_mutex_lock(&window->arg.lock);
+                window->arg.running = false;
+                chat_server_delete(window->chat_server);
+                window->chat_server = NULL;
+                pthread_mutex_unlock(&window->arg.lock);
+            }
+        } else {
+            float port_row_ratio[] = {0.5f, 0.5f};
+
+            nk_layout_row(ctx, NK_DYNAMIC, 35, 2, port_row_ratio);
+            nk_property_int(ctx, "Port", 0, &port, 65535, 1, 1);
+            if (nk_button_label(ctx, "Create chat group")) {
+                if ((window->chat_server = chat_server_create(port))) {
+                    window->arg.running = true;
+                    window->arg.chat_server = window->chat_server;
+                    pthread_mutex_unlock(&window->arg.lock);
+                    pthread_create(&window->thread, NULL, thread_server_run, &window->arg);
+                }
+            }
+        }
+    }
+    nk_end(ctx);
+
+    glClearColor(bg.r, bg.g, bg.b, bg.a);
+    glClear(GL_COLOR_BUFFER_BIT);
 }
