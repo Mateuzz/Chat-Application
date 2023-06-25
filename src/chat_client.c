@@ -73,7 +73,7 @@ int chat_user_message_ready(ChatUser *user)
     return CHAT_USER_MESSAGE_UNREADY;
 }
 
-ChatMessage *get_last_message(ChatUser *user)
+ChatMessage *get_next_message(ChatUser *user)
 {
     user->bytes_read = 0;
     return &user->in;

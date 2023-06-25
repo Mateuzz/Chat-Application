@@ -42,6 +42,6 @@ ssize_t chat_user_process_messages(ChatUser *user);
 int chat_user_message_ready(ChatUser *user);
 
 // Should be called only if message is ready
-ChatMessage *get_last_message(ChatUser *user);
+ChatMessage *get_next_message(ChatUser *user);
 
 void chat_user_delete(ChatUser *user);

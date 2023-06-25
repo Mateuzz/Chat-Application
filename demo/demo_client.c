@@ -1,5 +1,4 @@
 #include "chat_client.h"
-#include "chat_common.h"
 
 int main(void)
 {
@@ -31,7 +30,7 @@ int main(void)
         }
 
         if (chat_user_message_ready(user) == CHAT_USER_MESSAGE_READY)  {
-            ChatMessage *in = get_last_message(user);
+            ChatMessage *in = get_next_message(user);
 
             switch (in->type) {
             case CHAT_MESSAGE_CLIENT_MESSAGE:
