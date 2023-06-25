@@ -1,12 +1,7 @@
-#define NK_IMPLEMENTATION
-#define NK_SDL_GL3_IMPLEMENTATION
 #define WINDOW_WIDTH 1200
 #define WINDOW_HEIGHT 800
 
-#include "App.h"
 #include "Interface.h"
-
-#include <stdlib.h>
 
 typedef enum InputResult {
     INPUT_RESULT_NONE,
@@ -45,6 +40,8 @@ App *app_create()
 
     app->window = NULL;
     app->gl_context = NULL;
+    app->chat_server = NULL;
+    app->chat_user = NULL;
 
     SDL_SetHint(SDL_HINT_VIDEO_HIGHDPI_DISABLED, "0");
     SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_EVENTS);
@@ -105,7 +102,7 @@ void app_run(App *app)
             break;
         }
 
-        draw_gui(app->ctx);
+        draw_server_window(app->ctx, app->chat_server);
 
         render_buffer(app);
     }

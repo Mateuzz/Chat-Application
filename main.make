@@ -123,12 +123,14 @@ GENERATED += $(OBJDIR)/chat_client.o
 GENERATED += $(OBJDIR)/chat_server.o
 GENERATED += $(OBJDIR)/main.o
 GENERATED += $(OBJDIR)/network.o
+GENERATED += $(OBJDIR)/nuklear_common.o
 OBJECTS += $(OBJDIR)/App.o
 OBJECTS += $(OBJDIR)/Interface.o
 OBJECTS += $(OBJDIR)/chat_client.o
 OBJECTS += $(OBJDIR)/chat_server.o
 OBJECTS += $(OBJDIR)/main.o
 OBJECTS += $(OBJDIR)/network.o
+OBJECTS += $(OBJDIR)/nuklear_common.o
 
 # Rules
 # #############################################
@@ -208,6 +210,9 @@ $(OBJDIR)/main.o: src/main.c
 	@echo "$(notdir $<)"
 	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 $(OBJDIR)/network.o: src/network.c
+	@echo "$(notdir $<)"
+	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
+$(OBJDIR)/nuklear_common.o: src/nuklear_common.c
 	@echo "$(notdir $<)"
 	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 

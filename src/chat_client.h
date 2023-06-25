@@ -17,7 +17,7 @@ typedef struct ChatUser {
         CHAT_USER_STATUS_CONNECTED,
     } status;
     Socket socket;
-    char username[USERNAME_MAX]; 
+    char username[USERNAME_MAX];
     ChatMessage in;
     ChatMessage out;
     ssize_t bytes_read;
@@ -34,16 +34,16 @@ int chat_user_disconnect(ChatUser *user);
 // return error code or sucess
 int chat_user_set_username(ChatUser *user, const char *name);
 
-// return number of bytes send or error code 
+// return number of bytes send or error code
 ssize_t chat_user_send_message(ChatUser *user, const char *message);
 
-// return number of bytes read or error code 
+// return number of bytes read or error code
 ssize_t chat_user_process_messages(ChatUser *user);
 
 // return ready or unready, or error code
 int chat_user_message_ready(ChatUser *user);
 
 // Should be called only if message is ready
-ChatMessage * get_last_message(ChatUser *user);
+ChatMessage *get_last_message(ChatUser *user);
 
 void chat_user_delete(ChatUser *user);

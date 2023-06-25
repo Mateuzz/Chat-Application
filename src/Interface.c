@@ -1,43 +1,27 @@
 #include "Interface.h"
+#include "chat_server.h"
 
-void draw_gui(struct nk_context *ctx)
+// preciso da porta em que vai criar
+
+void draw_server_window(struct nk_context *ctx, ChatServer *chat_server)
 {
-    static struct nk_colorf bg = {0.8f, 0.0f, 0.1f, 1.0f};
-
+    static struct nk_colorf bg = { 0.05f, 0.05f, 0.09f, 1.0f };
+    static int port = 0;
+    
     if (nk_begin(ctx,
-                "Demo",
-                nk_rect(50, 50, 230, 250),
+                "Servidor",
+                nk_rect(0, 0, 300, 90),
                 NK_WINDOW_MINIMIZABLE | NK_WINDOW_TITLE | NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE)) {
-        enum { EASY, HARD };
-        static int op = EASY;
-        static int property = 20;
+        float port_row_ratio[] = { 0.5f, 0.5f };
+        nk_layout_row(ctx, NK_DYNAMIC, 35, 2, port_row_ratio);
+        nk_property_int(ctx, "Port", 0, &port, 65535, 1, 1);
 
-        nk_layout_row_static(ctx, 30, 80, 1);
-        if (nk_button_label(ctx, "button"))
-            printf("button pressed!\n");
-        nk_layout_row_dynamic(ctx, 30, 2);
-        if (nk_option_label(ctx, "easy", op == EASY))
-            op = EASY;
-        if (nk_option_label(ctx, "hard", op == HARD))
-            op = HARD;
-        nk_layout_row_dynamic(ctx, 22, 1);
-        nk_property_int(ctx, "Compression:", 0, &property, 100, 10, 1);
-
-        nk_layout_row_dynamic(ctx, 20, 1);
-        nk_label(ctx, "background:", NK_TEXT_LEFT);
-        nk_layout_row_dynamic(ctx, 25, 1);
-        if (nk_combo_begin_color(ctx, nk_rgb_cf(bg), nk_vec2(nk_widget_width(ctx), 400))) {
-            nk_layout_row_dynamic(ctx, 120, 1);
-            bg = nk_color_picker(ctx, bg, NK_RGBA);
-            nk_layout_row_dynamic(ctx, 25, 1);
-            bg.r = nk_propertyf(ctx, "#R:", 0, bg.r, 1.0f, 0.01f, 0.005f);
-            bg.g = nk_propertyf(ctx, "#G:", 0, bg.g, 1.0f, 0.01f, 0.005f);
-            bg.b = nk_propertyf(ctx, "#B:", 0, bg.b, 1.0f, 0.01f, 0.005f);
-            bg.a = nk_propertyf(ctx, "#A:", 0, bg.a, 1.0f, 0.01f, 0.005f);
-            nk_combo_end(ctx);
+        if (nk_button_label(ctx, "Create chat group")) {
+            chat_server = chat_server_create(port);
         }
-    }
+    } 
     nk_end(ctx);
+
 
     glClearColor(bg.r, bg.g, bg.b, bg.a);
     glClear(GL_COLOR_BUFFER_BIT);

@@ -9,6 +9,10 @@
 #include <stdint.h>
 #include <signal.h>
 #include <pthread.h>
+#include <assert.h>
+#include <limits.h>
+#include <math.h>
+#include <stdarg.h>
 
 #define SIZE_ARRAY(a) (sizeof(a) / sizeof(a[0]))
 
