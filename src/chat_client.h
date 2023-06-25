@@ -31,11 +31,9 @@ int chat_user_connect(ChatUser *user, int port, const char *ip);
 // return error code or sucess
 int chat_user_disconnect(ChatUser *user);
 
-// return error code or sucess
-int chat_user_set_username(ChatUser *user, const char *name);
-
 // return number of bytes send or error code
-ssize_t chat_user_send_message(ChatUser *user, const char *message);
+// must set ChatUser::out before using this
+ssize_t chat_user_send_message(ChatUser *user);
 
 // return number of bytes read or error code
 ssize_t chat_user_process_messages(ChatUser *user);

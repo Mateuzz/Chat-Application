@@ -11,4 +11,6 @@ int main()
     for (;;) {
         chat_server_update(server);
     }
+
+    chat_server_delete(server);
 }

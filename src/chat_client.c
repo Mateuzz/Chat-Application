@@ -42,29 +42,11 @@ int chat_user_disconnect(ChatUser *user)
     return CHAT_USER_SUCESS;
 }
 
-ssize_t chat_user_send_message(ChatUser *user, const char *message)
+ssize_t chat_user_send_message(ChatUser *user)
 {
     if (user->status == CHAT_USER_STATUS_DISCONNECTED) 
         return CHAT_USER_ERROR_DISCONNECTED;
-
-    size_t len = MIN(MESSAGE_MAX, strlen(message));
-    user->out.type = CHAT_MESSAGE_CLIENT_MESSAGE;
-    memcpy(user->out.msg, message, len);
     return send(user->socket.fd, &user->out, sizeof(user->out), 0);
-}
-
-int chat_user_set_username(ChatUser *user, const char *name)
-{
-    if (user->status == CHAT_USER_STATUS_DISCONNECTED)
-        return CHAT_USER_ERROR_DISCONNECTED;
-    size_t len = MIN(strlen(name), USERNAME_MAX);
-    user->out.type = CHAT_MESSAGE_CLIENT_CHANGE_INFO;
-    memcpy(user->out.username, name, len);
-    if (send(user->socket.fd, &user->out, sizeof(user->out), 0) > 0) {
-        memcpy(user->username, name, len);
-        return CHAT_USER_SUCESS;
-    }
-    return CHAT_USER_ERROR_SEND;
 }
 
 ssize_t chat_user_process_messages(ChatUser *user)

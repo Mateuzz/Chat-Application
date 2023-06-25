@@ -1,5 +1,5 @@
 #include "chat_client.h"
-#include "network.h"
+#include "chat_common.h"
 
 int main(void)
 {
@@ -16,51 +16,49 @@ int main(void)
         return error;
     }
 
-    if ((error = chat_user_set_username(user, "Mateus")) != CHAT_USER_SUCESS) {
-        printf("Erro ao mudar de nome: %d\n", error);
+    user->out.type = CHAT_MESSAGE_CLIENT_CHANGE_INFO;
+    strcpy(user->out.username, "Mateus");
+
+    if (chat_user_send_message(user) < 0) {
+        printf("Erro ao mudar mudar de nome\n");
         return error;
     }
 
-    sleep(1);
+    int i = 0;
+    while (i < 20) {
+        while (chat_user_process_messages(user) > 0) {
 
-    error = chat_user_send_message(user, "Uma mensagem enviada ao servidor");
-    if (error < 0) {
-        printf("Erro ao mudar mandar mensagem: %d\n", error);
-        return error;
-    }
-
-    while (chat_user_message_ready(user) != CHAT_USER_MESSAGE_READY) {
-        chat_user_process_messages(user);
-    }
-
-    if (chat_user_message_ready(user) == CHAT_USER_MESSAGE_READY) {
-        printf("Mensagem recebida do servidor\n");
-        ChatMessage *in = get_last_message(user);
-
-        switch (in->type) {
-        case CHAT_MESSAGE_SERVER_ACCEPTED:
-            printf("CLiente foi aceito\n");
-            break;
-
-        case CHAT_MESSAGE_SERVER_REFUSED:
-            printf("Cliente recusado\n");
-            break;
-
-        case CHAT_MESSAGE_CLIENT_MESSAGE:
-            printf("Alguem mandou uma mensagen\n");
-            printf("%s: %s\n", in->username, in->msg);
-            break;
-
-        default:
-            printf("Estranho\n");
         }
-    } else {
-        printf("Mensagem nao pronta anda\n");
+
+        if (chat_user_message_ready(user) == CHAT_USER_MESSAGE_READY)  {
+            ChatMessage *in = get_last_message(user);
+
+            switch (in->type) {
+            case CHAT_MESSAGE_CLIENT_MESSAGE:
+                printf("Alguem mandou uma mensagen\n");
+                printf("%s: %s\n", in->username, in->msg);
+                break;
+
+            default:
+                printf("Estranho\n");
+            }
+        }
+
+        sleep(1);
+        user->out.type = CHAT_MESSAGE_CLIENT_MESSAGE;
+        sprintf(user->out.msg, "Mensagem n° %d\n", i);
+        if (chat_user_send_message(user) < 0) {
+            printf("Erro ao mandar mensagem\n");
+        }
+
+        ++i;
     }
 
     if (chat_user_disconnect(user) == CHAT_USER_SUCESS) {
-        printf("Encerrada conexao com sucesso\n");
+        puts("Conexao desconectada");
     }
 
     chat_user_delete(user);
+
+    return 0;
 }
