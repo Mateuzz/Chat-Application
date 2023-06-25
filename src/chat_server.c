@@ -22,7 +22,9 @@ process_client_message(ChatClient *client, ChatClient *clients, int clients_coun
         return CLIENT_MESSAGE_RESULT_OK;
 
     case CLIENT_MESSAGE:
-        PRINT_DEBUG("Mensagem chegou do cliente %s: %s\n", client->username, client->message_buffer.msg);
+        PRINT_DEBUG("Mensagem chegou do cliente %s: %s\n",
+                    client->username,
+                    client->message_buffer.msg);
         strcpy(client->message_buffer.username, client->username);
         for (int i = 0; i < clients_count; ++i) {
             send(clients[i].fd, &client->message_buffer, sizeof(client->message_buffer), 0);
@@ -30,20 +32,14 @@ process_client_message(ChatClient *client, ChatClient *clients, int clients_coun
         return CLIENT_MESSAGE_RESULT_OK;
 
     case ENDED_CONNECTION:
-        return CLIENT_MESSAGE_RESULT_ENDED;
+        PRINT_DEBUG("Client encerrou conexao\n");
+        client->status = CLIENT_STATUS_INACTIVE;
+        return CLIENT_MESSAGE_RESULT_OK;
 
     default:
         exit(1);
         break;
     }
-}
-
-static ssize_t read_from_client(ChatClient *client)
-{
-    return read_socket_message(client->fd,
-                               &client->message_buffer,
-                               &client->current_message_bytes_read,
-                               sizeof(client->message_buffer));
 }
 
 void chat_server_update(ChatServer *chat)
@@ -76,7 +72,10 @@ void chat_server_update(ChatServer *chat)
         if (retval == 0 && error != 0) {
             PRINT_DEBUG("Cliente perdido, error\n");
             client->status = CLIENT_STATUS_INACTIVE;
-        } else if (read_from_client(client) <= 0) {
+        } else if (read_socket_message(client->fd,
+                                       &client->message_buffer,
+                                       &client->current_message_bytes_read,
+                                       sizeof(client->message_buffer)) <= 0) {
 
             // Cant read from client, start timeout until closing socket
             if (!client->non_responsing) {
@@ -91,11 +90,7 @@ void chat_server_update(ChatServer *chat)
             client->non_responsing = false;
             if (client->current_message_bytes_read == sizeof(client->message_buffer)) {
                 client->current_message_bytes_read = 0;
-                if (process_client_message(client, clients, clients_count) ==
-                        CLIENT_MESSAGE_RESULT_ENDED) {
-                    PRINT_DEBUG("Client encerrou conexao\n");
-                    client->status = CLIENT_STATUS_INACTIVE;
-                }
+                process_client_message(client, clients, clients_count);
             }
         }
     }
@@ -108,10 +103,12 @@ void chat_server_update(ChatServer *chat)
     }
 }
 
-ChatServer* chat_server_create(int port)
+ChatServer *chat_server_create(int port)
 {
     ChatServer *chat = malloc(sizeof(ChatServer));
-    if (!chat || init_server(&chat->socket, AF_INET, SOCK_STREAM, port, INADDR_ANY, MAX_CONNECTIONS) != SERVER_INIT_SUCESS) {
+    if (!chat ||
+        init_server(&chat->socket, AF_INET, SOCK_STREAM, port, INADDR_ANY, MAX_CONNECTIONS) !=
+            SERVER_INIT_SUCESS) {
         free(chat);
         return NULL;
     }

@@ -1,5 +1,4 @@
 #include "chat_client.h"
-#include "chat_server.h"
 #include "network.h"
 
 int main(void)
