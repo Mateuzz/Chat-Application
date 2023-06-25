@@ -3,6 +3,7 @@
 
 #define WINDOW_WIDTH 1200
 #define WINDOW_HEIGHT 800
+
 struct App {
     SDL_Window *window;
     SDL_GLContext gl_context;
@@ -45,10 +46,6 @@ static void render_buffer(App *app)
 static void process_server(App *app)
 {
     ChatServerWindow* window = &app->chat_server_window;
-
-    if (window->chat_server) {
-        chat_server_update(window->chat_server);
-    }
     server_window_draw(app->ctx, window);
 }
 
@@ -183,6 +180,8 @@ void app_run(App *app)
 
 void app_delete(App *app)
 {
+    user_window_deinit(&app->chat_user_window);
+    server_window_deinit(&app->chat_server_window);
     nk_sdl_shutdown();
     SDL_GL_DeleteContext(app->gl_context);
     SDL_DestroyWindow(app->window);

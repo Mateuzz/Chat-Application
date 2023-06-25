@@ -4,6 +4,7 @@
 #include "chat_server.h"
 #include "gl_common.h"
 #include "nuklear_common.h"
+#include <bits/pthreadtypes.h>
 
 typedef struct WindowChatMessage {
     char username[USERNAME_MAX];
@@ -17,8 +18,16 @@ typedef struct ChatUserWindow {
     size_t messages_max;
 } ChatUserWindow;
 
+typedef struct ServerThreadArg {
+    ChatServer* chat_server; 
+    bool running;
+    pthread_mutex_t lock;
+} ServerThreadArg;
+
 typedef struct ChatServerWindow {
     ChatServer *chat_server;
+    pthread_t thread;
+    ServerThreadArg arg;
 } ChatServerWindow;
 
 void user_window_init(ChatUserWindow *window, int max_messages);

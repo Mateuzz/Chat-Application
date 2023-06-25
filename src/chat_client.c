@@ -19,7 +19,6 @@ int chat_user_connect(ChatUser *user, int port, const char *ip)
     fcntl(socket->fd, F_SETFL, O_NONBLOCK);
 
     user->bytes_read = 0;
-    user->status = CHAT_USER_STATUS_NON_CONFIRMED;
 
     return CHAT_USER_SUCESS;
 }
@@ -31,6 +30,7 @@ int chat_user_disconnect(ChatUser *user)
 
     user->out.type = CHAT_MESSAGE_CLIENT_END_CONNECTION;
     user->status = CHAT_USER_STATUS_DISCONNECTED;
+    user->bytes_read = 0;
     send(user->socket.fd, &user->out, sizeof(user->out), 0);
     return CHAT_USER_SUCESS;
 }
