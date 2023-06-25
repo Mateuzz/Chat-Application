@@ -18,6 +18,7 @@ int chat_user_connect(ChatUser *user, int port, const char *ip)
 
     fcntl(socket->fd, F_SETFL, O_NONBLOCK);
 
+    user->status =  CHAT_USER_STATUS_NON_CONFIRMED;
     user->bytes_read = 0;
 
     return CHAT_USER_SUCESS;
