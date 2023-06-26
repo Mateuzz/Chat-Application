@@ -8,10 +8,12 @@ workspace "chat"
     targetdir "bin"
 
     filter "configurations:Release"
+        kind "WindowedApp"
         defines {"RELEASE"}
         optimize "On"
 
     filter "configurations:Debug"
+        kind "ConsoleApp"
         defines {"DEBUG"}
         symbols "On"
 
@@ -21,7 +23,10 @@ workspace "chat"
 
     filter {"platforms:Linux32"}
         system "linux"
-        architecture "x86" filter {"platforms:Win64"} system "Windows"
+        architecture "x86" 
+
+    filter {"platforms:Win64"} 
+        system "Windows"
         architecture "x86_64"
 
     filter {"platforms:Win32"}
@@ -29,20 +34,10 @@ workspace "chat"
         architecture "x86"
 
     filter {}
-        kind "ConsoleApp"
-        -- kind "WindowedApp"
         libdirs {"lib"}
         links {"SDL2", "OpenGL", "GL", "GLEW", "m", "GLU"}
         includedirs {"src/", "vendor/"}
 
     project "main"
         files {"src/**.c", "src/**.h"}
-        targetname "main"
-
-    project "server"
-        files {"demo/demo_server.c", "src/chat_server.c", "src/network.c"}
-        targetname "server"
-
-    project "client"
-        files {"demo/demo_client.c", "src/chat_client.c", "src/network.c"}
-        targetname "client"
+        targetname "%{cfg.buildcfg}"
