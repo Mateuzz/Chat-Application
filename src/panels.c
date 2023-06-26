@@ -58,7 +58,7 @@ void user_window_draw(struct nk_context *ctx, ChatUserWindow *window)
     ChatUser *user = window->chat_user;
 
     if (window->chat_user->status != CHAT_USER_STATUS_CONNECTED) {
-        if (nk_begin(ctx, "Join Chat", nk_rect(600, 0, 600, 800), WINDOW_FLAGS)) {
+        if (nk_begin(ctx, "Join Chat", nk_rect(600, 0, 600, 700), WINDOW_FLAGS)) {
             float ratio[] = {0.2f, 0.3f};
 
             nk_layout_row(ctx, NK_DYNAMIC, 30, 2, ratio);
@@ -136,7 +136,7 @@ void user_window_draw(struct nk_context *ctx, ChatUserWindow *window)
     } else {
         sprintf(buffer, "Messages - IP %s - Port %d", user->chat_ip_address, (int)user->chat_port);
 
-        if (nk_begin(ctx, buffer, nk_rect(600, 0, 600, 680), WINDOW_FLAGS)) {
+        if (nk_begin(ctx, buffer, nk_rect(600, 0, 600, 580), WINDOW_FLAGS)) {
             w_width = nk_window_get_width(ctx);
 
             float char_per_line = w_width * 0.8f / 8.3f;
@@ -153,7 +153,7 @@ void user_window_draw(struct nk_context *ctx, ChatUserWindow *window)
         }
         nk_end(ctx);
 
-        if (nk_begin(ctx, "Chat Prompt", nk_rect(600, 680, 600, 120), WINDOW_FLAGS)) {
+        if (nk_begin(ctx, "Chat Prompt", nk_rect(600, 580, 600, 120), WINDOW_FLAGS)) {
             nk_layout_row(ctx, NK_DYNAMIC, 30, 2, (float[]) {0.8f, 0.2f});
             nk_edit_string(ctx,
                     NK_EDIT_SIMPLE,
@@ -228,7 +228,7 @@ void server_window_draw(struct nk_context *ctx, ChatServerWindow *window)
             nk_end(ctx);
         }
     } else {
-        if (nk_begin(ctx, "Server Manager", nk_rect(0, 0, 600, 800), WINDOW_FLAGS)) {
+        if (nk_begin(ctx, "Server Manager", nk_rect(0, 0, 600, 700), WINDOW_FLAGS)) {
             nk_layout_row_dynamic(ctx, 30, 1);
             sprintf(buffer_label, "Server running at port %d", port);
             nk_label(ctx, buffer_label, NK_TEXT_CENTERED);

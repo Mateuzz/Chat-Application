@@ -5,7 +5,7 @@
 #include "pchheader.h"
 
 #define WINDOW_WIDTH 1200
-#define WINDOW_HEIGHT 800
+#define WINDOW_HEIGHT 700
 
 static ChatMessage g_message_buffer;
 
