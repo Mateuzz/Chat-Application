@@ -1,6 +1,16 @@
 #include "chat_server.h"
 #include "chat_common.h"
 
+static bool is_user_banned(ChatServer *chat, ChatClient *cl)
+{
+    for (int i = 0; i < chat->clients_banned_count; ++i) {
+        if (cl->socket.addr.sin_addr.s_addr == chat->banned_clients[i].sin_addr.s_addr) {
+            return true;
+        }
+    }
+    return false;
+}
+
 static void send_message(ChatServer *chat, ChatMessage *message, ChatClient *client)
 {
     send(client->socket.fd, message, sizeof(ChatMessage), 0);
@@ -62,13 +72,13 @@ static void process_client_message(ChatServer* chat, ChatClient *client)
     client->status = CLIENT_STATUS_ACTIVE;
     ChatClient *clients = chat->clients;
     int clients_count = chat->clients_count;
-    ChatServerInfo *info = &chat->info.data[chat->info.count];
 
     switch (client->message_buffer.type) {
     case CHAT_MESSAGE_CLIENT_CHANGE_INFO: {
+        PRINT_DEBUG("Servidor recebeu Message::CLIENT_CHANGE_INFO");
         const char *new_username = client->message_buffer.username;
 
-        for (int i = 0; i < clients_count; ++i)
+        for (int i = 0; i < clients_count; ++i) {
             if (strcmp(new_username, clients[i].username) == 0) {
                 PRINT_DEBUG(
                     "Server: Requisição negada: %s Tentando mudar para nome do cliente %s\n",
@@ -76,6 +86,7 @@ static void process_client_message(ChatServer* chat, ChatClient *client)
                     clients[i].username);
                 return;
             }
+        }
 
         update_server_info(chat, INFO_CLIENT_CHANGE_NAME, client->username, new_username, 0);
 
@@ -120,17 +131,27 @@ void chat_server_update(ChatServer *chat)
 
     // try accept new client (async)
     if ((cl->socket.fd = accept(fd, (struct sockaddr *)&cl->socket.addr, &chat->addrlen)) > 0) {
-        sprintf(buffer, "Convidado00%d", clients_count);
-        chat_message_make( &chat->message_buffer, CHAT_MESSAGE_SERVER_ACCEPTED, NULL, 0);
-        strcpy(cl->username, buffer);
-        send_message(chat, &chat->message_buffer, cl);
+        if (is_user_banned(chat, cl)) {
+            chat_message_make(&chat->message_buffer, CHAT_MESSAGE_SERVER_REFUSED, NULL, 0);
+            send_message(chat, &chat->message_buffer, cl);
+        } else {
+            sprintf(buffer, "Convidado00%d", clients_count);
+            strcpy(cl->username, buffer);
+            fcntl(cl->socket.fd, F_SETFL, O_NONBLOCK);
+            cl->current_message_bytes_read = 0;
+            cl->status = CLIENT_STATUS_ACTIVE;
 
-        fcntl(cl->socket.fd, F_SETFL, O_NONBLOCK);
-        cl->current_message_bytes_read = 0;
-        cl->status = CLIENT_STATUS_ACTIVE;
-        ++chat->clients_count;
+            chat_message_make( &chat->message_buffer, CHAT_MESSAGE_SERVER_ACCEPTED, NULL, 0);
+            send_message(chat, &chat->message_buffer, cl);
 
-        PRINT_DEBUG("Server: Cliente %s adicionado\n", cl->username);
+            PRINT_DEBUG("Server: Cliente %s adicionado\n", cl->username);
+
+            for (size_t i = 0; i < chat->received.count; ++i) {
+                send(cl->socket.fd, &chat->received.messages[i], sizeof(ChatMessage), 0);
+            }
+
+            ++chat->clients_count;
+        }
     }
 
     // for each client, try read message or discover if client is up
@@ -142,12 +163,12 @@ void chat_server_update(ChatServer *chat)
 
         if (retval == 0 && error != 0) {
             PRINT_DEBUG("Server: Não é possivel mandar mensagem para %s, removendo\n",
-                        client->username);
+                    client->username);
             client->status = CLIENT_STATUS_INACTIVE;
         } else if (read_socket_message(client->socket.fd,
-                                       &client->message_buffer,
-                                       &client->current_message_bytes_read,
-                                       sizeof(client->message_buffer)) <= 0) {
+                    &client->message_buffer,
+                    &client->current_message_bytes_read,
+                    sizeof(client->message_buffer)) <= 0) {
 
             // can't read message from client, start timeout until warning or disconecct
             switch (client->status) {
@@ -179,7 +200,7 @@ void chat_server_update(ChatServer *chat)
             // We get a message from client, process it
             if (client->current_message_bytes_read == sizeof(client->message_buffer)) {
                 client->current_message_bytes_read = 0;
-                process_client_message(chat, clients);
+                process_client_message(chat, client);
             }
         }
     }
@@ -216,6 +237,8 @@ int chat_server_ban_user(ChatServer *chat, int user_index)
     PRINT_DEBUG("Server: Client %s has been banned\n", cl->username);
     cl->status = CLIENT_STATUS_INACTIVE;
 
+    chat->banned_clients[chat->clients_banned_count++] = cl->socket.addr;
+
     return 0;
 }
 
@@ -223,7 +246,7 @@ ChatServer *chat_server_create(int port)
 {
     ChatServer *chat = malloc(sizeof(ChatServer));
     if (!chat ||
-        init_server(&chat->socket, AF_INET, SOCK_STREAM, port, INADDR_ANY, MAX_CONNECTIONS) !=
+            init_server(&chat->socket, AF_INET, SOCK_STREAM, port, INADDR_ANY, MAX_CONNECTIONS) !=
             SERVER_INIT_SUCESS) {
         free(chat);
         return NULL;
@@ -233,6 +256,7 @@ ChatServer *chat_server_create(int port)
     chat->clients_count = 0;
     chat->port = port;
     chat->info.count = 0;
+    chat->clients_banned_count = 0;
 
     signal(SIGPIPE, SIG_IGN);
     fcntl(chat->socket.fd, F_SETFL, O_NONBLOCK);

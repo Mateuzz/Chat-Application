@@ -2,6 +2,7 @@
 #include "chat_client.h"
 #include "chat_common.h"
 #include "chat_server.h"
+#include "nuklear/src/nuklear.h"
 #include <pthread.h>
 #include <signal.h>
 
@@ -42,15 +43,14 @@ void user_window_draw(struct nk_context *ctx, ChatUserWindow *window)
 {
     static char buffer[200];
     static char username[USERNAME_MAX];
-    static int username_len = 0;
-    static char ip_address[21] = "";
-    static int ip_address_len = 0;
-    static int port = 0;
+    static int username_len;
+    static char ip_address[21];
+    static int ip_address_len;
+    static int port;
     static int w_width;
     static char msg_buffer[MESSAGE_MAX];
-    static int msg_len = 0;
+    static int msg_len;
     static ChatMessage message_buffer;
-    static enum ChatUserStatus last_status;
     static enum Flags {
         FLAG_USERNAME_EMPTY = 0x01,
     } flags;
@@ -145,8 +145,9 @@ void user_window_draw(struct nk_context *ctx, ChatUserWindow *window)
             for (size_t i = 0; i < msgs->count; ++i) {
                 int lines = ceilf(msgs->messages[i].msg_len / char_per_line);
                 int row_height = lines * 20;
-                nk_layout_row(ctx, NK_DYNAMIC, row_height, 2, (float[]) {0.15f, 0.75f});
-                nk_label(ctx, msgs->messages[i].username, NK_TEXT_ALIGN_LEFT | NK_TEXT_ALIGN_TOP);
+                nk_layout_row(ctx, NK_DYNAMIC, row_height, 3, (float[]) {0.15f, 0.05f, 0.75f});
+                nk_label(ctx, msgs->messages[i].username, NK_TEXT_ALIGN_TOP | NK_TEXT_ALIGN_LEFT);
+                nk_label(ctx, " : ", NK_TEXT_ALIGN_LEFT | NK_TEXT_ALIGN_TOP);
                 nk_label_wrap(ctx, msgs->messages[i].msg);
             }
         }
@@ -155,19 +156,19 @@ void user_window_draw(struct nk_context *ctx, ChatUserWindow *window)
         if (nk_begin(ctx, "Chat Prompt", nk_rect(600, 680, 600, 120), WINDOW_FLAGS)) {
             nk_layout_row(ctx, NK_DYNAMIC, 30, 2, (float[]) {0.8f, 0.2f});
             nk_edit_string(ctx,
-                           NK_EDIT_SIMPLE,
-                           msg_buffer,
-                           &msg_len,
-                           MESSAGE_MAX,
-                           nk_filter_default);
+                    NK_EDIT_SIMPLE,
+                    msg_buffer,
+                    &msg_len,
+                    MESSAGE_MAX,
+                    nk_filter_default);
 
             if (nk_button_label(ctx, "Send Message") && msg_len > 0) {
                 PRINT_DEBUG("Message size is %d\n", msg_len);
                 chat_message_make_and_send(&user->socket,
-                                           &message_buffer,
-                                           CHAT_MESSAGE_CLIENT_MESSAGE,
-                                           msg_buffer,
-                                           msg_len);
+                        &message_buffer,
+                        CHAT_MESSAGE_CLIENT_MESSAGE,
+                        msg_buffer,
+                        msg_len);
                 msg_len = 0;
             }
 
@@ -304,8 +305,8 @@ void server_window_draw(struct nk_context *ctx, ChatServerWindow *window)
                     int row_height = lines * 20;
                     nk_layout_row(ctx, NK_DYNAMIC, row_height, 2, (float[]) {0.15f, 0.75f});
                     nk_label(ctx,
-                             msgs->messages[i].username,
-                             NK_TEXT_ALIGN_LEFT | NK_TEXT_ALIGN_TOP);
+                            msgs->messages[i].username,
+                            NK_TEXT_ALIGN_LEFT | NK_TEXT_ALIGN_TOP);
                     nk_label_wrap(ctx, msgs->messages[i].msg);
                 }
 

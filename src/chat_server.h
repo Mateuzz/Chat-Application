@@ -48,6 +48,8 @@ typedef struct ChatServerInfoList {
 typedef struct ChatServer {
     Socket socket; 
     ChatClient clients[MAX_CONNECTIONS];
+    struct sockaddr_in banned_clients[MAX_CONNECTIONS];
+    int clients_banned_count;
     ChatServerInfoList info;
     MessageList received;
     ChatMessage message_buffer;
