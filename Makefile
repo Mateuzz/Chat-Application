@@ -10,49 +10,33 @@ endif
 
 ifeq ($(config),debug_linux64)
   main_config = debug_linux64
-  server_config = debug_linux64
-  client_config = debug_linux64
 
 else ifeq ($(config),debug_linux32)
   main_config = debug_linux32
-  server_config = debug_linux32
-  client_config = debug_linux32
 
 else ifeq ($(config),debug_win64)
   main_config = debug_win64
-  server_config = debug_win64
-  client_config = debug_win64
 
 else ifeq ($(config),debug_win32)
   main_config = debug_win32
-  server_config = debug_win32
-  client_config = debug_win32
 
 else ifeq ($(config),release_linux64)
   main_config = release_linux64
-  server_config = release_linux64
-  client_config = release_linux64
 
 else ifeq ($(config),release_linux32)
   main_config = release_linux32
-  server_config = release_linux32
-  client_config = release_linux32
 
 else ifeq ($(config),release_win64)
   main_config = release_win64
-  server_config = release_win64
-  client_config = release_win64
 
 else ifeq ($(config),release_win32)
   main_config = release_win32
-  server_config = release_win32
-  client_config = release_win32
 
 else
   $(error "invalid configuration $(config)")
 endif
 
-PROJECTS := main server client
+PROJECTS := main
 
 .PHONY: all clean help $(PROJECTS) 
 
@@ -64,22 +48,8 @@ ifneq (,$(main_config))
 	@${MAKE} --no-print-directory -C . -f main.make config=$(main_config)
 endif
 
-server:
-ifneq (,$(server_config))
-	@echo "==== Building server ($(server_config)) ===="
-	@${MAKE} --no-print-directory -C . -f server.make config=$(server_config)
-endif
-
-client:
-ifneq (,$(client_config))
-	@echo "==== Building client ($(client_config)) ===="
-	@${MAKE} --no-print-directory -C . -f client.make config=$(client_config)
-endif
-
 clean:
 	@${MAKE} --no-print-directory -C . -f main.make clean
-	@${MAKE} --no-print-directory -C . -f server.make clean
-	@${MAKE} --no-print-directory -C . -f client.make clean
 
 help:
 	@echo "Usage: make [config=name] [target]"
@@ -98,7 +68,5 @@ help:
 	@echo "   all (default)"
 	@echo "   clean"
 	@echo "   main"
-	@echo "   server"
-	@echo "   client"
 	@echo ""
 	@echo "For more information, see https://github.com/premake/premake-core/wiki"
