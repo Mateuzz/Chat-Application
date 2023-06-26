@@ -24,4 +24,15 @@ typedef struct ChatMessage {
     size_t msg_len;
 } ChatMessage;
 
-ssize_t chat_message_send(Socket *socket, enum Type type, const char* value, size_t len);
+typedef struct MessageList {
+    ChatMessage *messages;
+    size_t count;
+    size_t max;
+} MessageList;
+
+int chat_message_make(ChatMessage *msg, enum Type type, const char* value, size_t len);
+ssize_t chat_message_make_and_send(Socket *socket, ChatMessage* msg, enum Type type, const char* value, size_t len);
+
+int message_list_init(MessageList *list, int max_messages);
+void message_list_deinit(MessageList *list);
+int message_list_add(MessageList* list, const ChatMessage *message);

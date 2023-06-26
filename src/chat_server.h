@@ -3,12 +3,14 @@
 #include "chat_common.h"
 
 #define MAX_CONNECTIONS 30
-#define TIMEOUT_WARN_USER CLOCK_TO_SECONDS(30)
-#define TIMEOUT_BAN_USER CLOCK_TO_SECONDS(60)
+#define TIMEOUT_WARN_USER CLOCK_TO_SECONDS(120)
+#define TIMEOUT_BAN_USER CLOCK_TO_SECONDS(240)
+
+#define SERVER_INFO_BUFFER_SIZE 200
+#define SERVER_INFO_BUFFER_DATA_SIZE USERNAME_MAX
 
 typedef struct ChatClient {
-    int fd;
-    struct sockaddr_in addr;
+    Socket socket;
     ssize_t current_message_bytes_read;
     ChatMessage message_buffer;
     char username[USERNAME_MAX + 1];
@@ -21,16 +23,34 @@ typedef struct ChatClient {
     clock_t timeout_start;
 } ChatClient;
 
-typedef struct MessageList {
-    ChatMessage *messages;
-    size_t count;
-    size_t max;
-} MessageList;
+typedef struct ChatServerInfo {
+    enum ServerInfoType {
+        INFO_TYPE_NONE,
+        INFO_CLIENT_CHANGE_NAME,
+        INFO_CLIENT_BANNED,
+        INFO_CLIENT_ENTERED,
+        INFO_CLIENT_ACCEPTED,
+        INFO_CLIENT_DISCONNECTED,
+        INFO_CLIENT_REFUSED,
+        INFO_CLIENT_CHECKING_ALIVE,
+        INFO_CLIENT_CONFIRMED_ALIVE,
+    } type;
+    int flag;
+    char data1[SERVER_INFO_BUFFER_DATA_SIZE]; // used for username mostly
+    char data2[SERVER_INFO_BUFFER_DATA_SIZE];
+} ChatServerInfo;
+
+typedef struct ChatServerInfoList {
+    ChatServerInfo data[SERVER_INFO_BUFFER_SIZE];
+    int count;
+} ChatServerInfoList;
 
 typedef struct ChatServer {
     Socket socket; 
     ChatClient clients[MAX_CONNECTIONS];
+    ChatServerInfoList info;
     MessageList received;
+    ChatMessage message_buffer;
     int clients_count;
     socklen_t addrlen;
     int port;
@@ -42,7 +62,3 @@ void chat_server_delete(ChatServer *chat);
 
 int chat_server_ban_user(ChatServer *chat, int user_index);
 int chat_server_get_user_index(ChatServer *chat, const char *name);
-
-int message_list_init(MessageList *list, int max_messages);
-void message_list_deinit(MessageList *list);
-int message_list_add(MessageList* list, const ChatMessage *message);

@@ -7,6 +7,8 @@
 #define WINDOW_WIDTH 1200
 #define WINDOW_HEIGHT 800
 
+static ChatMessage g_message_buffer;
+
 struct App {
     SDL_Window *window;
     SDL_GLContext gl_context;
@@ -58,7 +60,11 @@ static void process_user(App *app)
     ChatUser* user = window->chat_user;
 
     switch (user->status) {
+    case CHAT_USER_STATUS_NONE:
     case CHAT_USER_STATUS_DISCONNECTED:
+    case CHAT_USER_STATUS_BANNED:
+    case CHAT_USER_STATUS_REFUSED:
+    case CHAT_USER_STATUS_FAILED:
         break;
 
     case CHAT_USER_STATUS_NON_CONFIRMED:
@@ -75,7 +81,7 @@ static void process_user(App *app)
 
                 case CHAT_MESSAGE_SERVER_REFUSED:
                     PRINT_DEBUG("AppUser: Cliente foi negado pelo server\n", msg->username);
-                    user->status = CHAT_USER_STATUS_DISCONNECTED;
+                    user->status = CHAT_USER_STATUS_REFUSED;
                     break;
                 }
             }
@@ -94,11 +100,13 @@ static void process_user(App *app)
                     break;
 
                 case CHAT_MESSAGE_SERVER_CHECK_ALIVE:
-                    user->out.type = CHAT_MESSAGE_CLIENT_ALIVE;
-                    chat_user_send_message(user);
+                    chat_message_make_and_send(&user->socket, &g_message_buffer, CHAT_MESSAGE_CLIENT_ALIVE, NULL, 0);
                     break;
 
                 case CHAT_MESSAGE_SERVER_BAN:
+                    user->status = CHAT_USER_STATUS_BANNED;
+                    break;
+
                 case CHAT_MESSAGE_SERVER_ENDED:
                     PRINT_DEBUG("Appuser: Cliente desconetado ou banido\n");
                     user->status = CHAT_USER_STATUS_DISCONNECTED;
