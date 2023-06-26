@@ -1,1 +1,1 @@
-LD_LIBRARY_PATH=./lib ./bin/main
+LD_LIBRARY_PATH=./lib ./bin/Debug
