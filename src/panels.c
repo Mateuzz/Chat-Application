@@ -303,10 +303,9 @@ void server_window_draw(struct nk_context *ctx, ChatServerWindow *window)
                 for (size_t i = 0; i < msgs->count; ++i) {
                     int lines = ceilf(msgs->messages[i].msg_len / char_per_line);
                     int row_height = lines * 20;
-                    nk_layout_row(ctx, NK_DYNAMIC, row_height, 2, (float[]) {0.15f, 0.75f});
-                    nk_label(ctx,
-                            msgs->messages[i].username,
-                            NK_TEXT_ALIGN_LEFT | NK_TEXT_ALIGN_TOP);
+                    nk_layout_row(ctx, NK_DYNAMIC, row_height, 3, (float[]) {0.15f, 0.05f, 0.75f});
+                    nk_label(ctx, msgs->messages[i].username, NK_TEXT_ALIGN_TOP | NK_TEXT_ALIGN_LEFT);
+                    nk_label(ctx, " : ", NK_TEXT_ALIGN_LEFT | NK_TEXT_ALIGN_TOP);
                     nk_label_wrap(ctx, msgs->messages[i].msg);
                 }
 
