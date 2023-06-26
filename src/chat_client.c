@@ -29,15 +29,17 @@ int chat_user_connect(ChatUser *user, int port, const char *ip)
     return CHAT_USER_SUCESS;
 }
 
-int chat_user_disconnect(ChatUser *user)
+int chat_user_disconnect(ChatUser *user, enum ChatUserStatus new_status)
 {
     if (user->status != CHAT_USER_STATUS_CONNECTED && user->status != CHAT_USER_STATUS_NON_CONFIRMED)
         return CHAT_USER_ERROR_DISCONNECTED;
 
     user->out.type = CHAT_MESSAGE_CLIENT_END_CONNECTION;
-    user->status = CHAT_USER_STATUS_DISCONNECTED;
+    user->status = new_status;
     user->bytes_read = 0;
-    send(user->socket.fd, &user->out, sizeof(user->out), 0);
+    if (new_status == CHAT_USER_STATUS_DISCONNECTED) {
+        send(user->socket.fd, &user->out, sizeof(user->out), 0);
+    }
     close_socket(&user->socket);
     return CHAT_USER_SUCESS;
 }

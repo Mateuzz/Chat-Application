@@ -26,6 +26,19 @@ static void *thread_server_run(void *arg)
     return NULL;
 }
 
+static void thread_stop_server(ChatServerWindow *window)
+{
+    pthread_mutex_lock(&window->arg.lock);
+
+    window->arg.running = false;
+
+    chat_server_delete(window->chat_server);
+    window->chat_server = NULL;
+
+    pthread_mutex_unlock(&window->arg.lock);
+    pthread_join(window->thread, NULL);
+}
+
 void user_window_init(ChatUserWindow *window, int max_messages)
 {
     window->chat_user = chat_user_create();
@@ -174,7 +187,7 @@ void user_window_draw(struct nk_context *ctx, ChatUserWindow *window)
 
             nk_layout_row_dynamic(ctx, 30, 1);
             if (nk_button_label(ctx, "Disconnect from chat")) {
-                chat_user_disconnect(user);
+                chat_user_disconnect(user, CHAT_USER_STATUS_DISCONNECTED);
                 message_list_deinit(&window->messages);
             }
         }
@@ -188,28 +201,19 @@ void server_window_init(ChatServerWindow *window)
     pthread_mutex_init(&window->arg.lock, NULL);
 }
 
+
 void server_window_deinit(ChatServerWindow *window)
 {
     if (window->chat_server) {
-        pthread_mutex_lock(&window->arg.lock);
-
-        window->arg.running = false;
-
-        chat_server_delete(window->chat_server);
-        window->chat_server = NULL;
-
-        pthread_mutex_unlock(&window->arg.lock);
+        thread_stop_server(window);
     }
     pthread_mutex_destroy(&window->arg.lock);
 }
 
 void server_window_draw(struct nk_context *ctx, ChatServerWindow *window)
 {
-    static struct nk_colorf bg = {0.05f, 0.05f, 0.09f, 1.0f};
     static int port = 0;
-    static char buffer_label[500];
-
-    ChatServer *server = window->chat_server;
+    static char buffer_label[100];
 
     if (!window->chat_server) {
         if (nk_begin(ctx, "Server", nk_rect(0, 0, 600, 120), WINDOW_FLAGS)) {
@@ -235,19 +239,17 @@ void server_window_draw(struct nk_context *ctx, ChatServerWindow *window)
 
             nk_layout_row_dynamic(ctx, 30, 1);
             if (nk_button_label(ctx, "Stop server")) {
-                pthread_mutex_lock(&window->arg.lock);
-                window->arg.running = false;
-                chat_server_delete(window->chat_server);
-                window->chat_server = NULL;
-                pthread_mutex_unlock(&window->arg.lock);
+                thread_stop_server(window);
+                nk_end(ctx);
+                return;
             }
 
             if (nk_tree_push(ctx, NK_TREE_TAB, "Clients", NK_MINIMIZED)) {
-                for (int i = 0; i < server->clients_count; ++i) {
+                for (int i = 0; i < window->chat_server->clients_count; ++i) {
                     nk_layout_row_dynamic(ctx, 30, 2);
-                    nk_label(ctx, server->clients[i].username, NK_TEXT_ALIGN_LEFT);
+                    nk_label(ctx, window->chat_server->clients[i].username, NK_TEXT_ALIGN_LEFT);
                     if (nk_button_label(ctx, "Ban")) {
-                        chat_server_ban_user(server, i);
+                        chat_server_ban_user(window->chat_server, i);
                     }
                 }
 
@@ -315,6 +317,4 @@ void server_window_draw(struct nk_context *ctx, ChatServerWindow *window)
         nk_end(ctx);
     }
 
-    glClearColor(bg.r, bg.g, bg.b, bg.a);
-    glClear(GL_COLOR_BUFFER_BIT);
 }

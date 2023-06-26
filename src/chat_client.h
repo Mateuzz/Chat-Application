@@ -36,7 +36,7 @@ ChatUser *chat_user_create(void);
 int chat_user_connect(ChatUser *user, int port, const char *ip);
 
 // return error code or sucess
-int chat_user_disconnect(ChatUser *user);
+int chat_user_disconnect(ChatUser *user, enum ChatUserStatus new_status);
 
 // return number of bytes send or error code
 // must set ChatUser::out before using this

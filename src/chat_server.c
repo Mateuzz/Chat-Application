@@ -208,6 +208,7 @@ void chat_server_update(ChatServer *chat)
     for (int i = 0; i < clients_count; ++i) {
         if (clients[i].status == CLIENT_STATUS_INACTIVE) {
             update_server_info(chat, INFO_CLIENT_DISCONNECTED, clients[i].username, NULL, 0);
+            close_socket(&clients[i].socket);
             clients[i] = clients[clients_count - 1];
             --chat->clients_count;
         }

@@ -43,6 +43,11 @@ static InputResult handle_input(App *app)
 
 static void render_buffer(App *app)
 {
+    static struct nk_colorf bg = {0.05f, 0.05f, 0.09f, 1.0f};
+
+    glClearColor(bg.r, bg.g, bg.b, bg.a);
+    glClear(GL_COLOR_BUFFER_BIT);
+
     glViewport(0, 0, app->win_width, app->win_height);
     nk_sdl_render(NK_ANTI_ALIASING_ON, MAX_VERTEX_MEMORY, MAX_ELEMENT_MEMORY);
     SDL_GL_SwapWindow(app->window);
@@ -86,7 +91,7 @@ static void process_user(App *app)
 
                 case CHAT_MESSAGE_SERVER_REFUSED:
                     PRINT_DEBUG("AppUser: Cliente foi negado pelo server\n", msg->username);
-                    user->status = CHAT_USER_STATUS_REFUSED;
+                    chat_user_disconnect(user, CHAT_USER_STATUS_REFUSED);
                     break;
                 }
             }
@@ -109,12 +114,12 @@ static void process_user(App *app)
                     break;
 
                 case CHAT_MESSAGE_SERVER_BAN:
-                    user->status = CHAT_USER_STATUS_BANNED;
+                    chat_user_disconnect(user, CHAT_USER_STATUS_BANNED);
                     break;
 
                 case CHAT_MESSAGE_SERVER_ENDED:
-                    PRINT_DEBUG("Appuser: Cliente desconetado ou banido\n");
-                    user->status = CHAT_USER_STATUS_DISCONNECTED;
+                    PRINT_DEBUG("Appuser: Cliente foi terminado\n");
+                    chat_user_disconnect(user, CHAT_USER_STATUS_DISCONNECTED);
                     break;
                 }
             }
