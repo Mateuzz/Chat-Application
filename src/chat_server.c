@@ -274,6 +274,7 @@ void chat_server_delete(ChatServer *chat)
     ChatMessage out = {.type = CHAT_MESSAGE_SERVER_ENDED};
     for (int i = 0; i < chat->clients_count; ++i) {
         send(chat->clients[i].socket.fd, &out, sizeof(out), 0);
+        close_socket(&chat->clients[i].socket);
     }
     message_list_deinit(&chat->received);
     close_socket(&chat->socket);
