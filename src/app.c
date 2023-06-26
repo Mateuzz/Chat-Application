@@ -73,6 +73,11 @@ static void process_user(App *app)
                 ChatMessage *msg = get_next_message(user);
 
                 switch (msg->type) {
+                case CHAT_MESSAGE_CLIENT_MESSAGE:
+                    PRINT_DEBUG("AppUser: Mensagem do servidor recebida\n");
+                    message_list_add(&window->messages, msg);
+                    break;
+
                 case CHAT_MESSAGE_SERVER_ACCEPTED:
                     PRINT_DEBUG("AppUser: Cliente %s foi aceito pelo server\n", msg->username);
                     strcpy(user->username, msg->username);
