@@ -5,7 +5,6 @@
 #include <pthread.h>
 #include <signal.h>
 
-
 #define WINDOW_FLAGS                                                                               \
     (NK_WINDOW_MINIMIZABLE | NK_WINDOW_BORDER | NK_WINDOW_TITLE | NK_WINDOW_MOVABLE |              \
      NK_WINDOW_SCALABLE)
@@ -86,11 +85,12 @@ void user_window_draw(struct nk_context *ctx, ChatUserWindow *window)
                     flags &= ~FLAG_USERNAME_EMPTY;
                     if (chat_user_connect(user, port, ip_address) != CHAT_USER_SUCESS) {
                     } else {
-                        
-                        chat_message_make_and_send(&user->socket, &message_buffer,
-                                          CHAT_MESSAGE_CLIENT_CHANGE_INFO,
-                                          username,
-                                          username_len);
+
+                        chat_message_make_and_send(&user->socket,
+                                                   &message_buffer,
+                                                   CHAT_MESSAGE_CLIENT_CHANGE_INFO,
+                                                   username,
+                                                   username_len);
                         message_list_init(&window->messages, 200);
                     }
                 }
@@ -163,7 +163,11 @@ void user_window_draw(struct nk_context *ctx, ChatUserWindow *window)
 
             if (nk_button_label(ctx, "Send Message") && msg_len > 0) {
                 PRINT_DEBUG("Message size is %d\n", msg_len);
-                chat_message_make_and_send(&user->socket, &message_buffer, CHAT_MESSAGE_CLIENT_MESSAGE, msg_buffer, msg_len);
+                chat_message_make_and_send(&user->socket,
+                                           &message_buffer,
+                                           CHAT_MESSAGE_CLIENT_MESSAGE,
+                                           msg_buffer,
+                                           msg_len);
                 msg_len = 0;
             }
 
@@ -172,7 +176,6 @@ void user_window_draw(struct nk_context *ctx, ChatUserWindow *window)
                 chat_user_disconnect(user);
                 message_list_deinit(&window->messages);
             }
-
         }
         nk_end(ctx);
     }
@@ -204,23 +207,11 @@ void server_window_draw(struct nk_context *ctx, ChatServerWindow *window)
     static struct nk_colorf bg = {0.05f, 0.05f, 0.09f, 1.0f};
     static int port = 0;
     static char buffer_label[500];
+
     ChatServer *server = window->chat_server;
 
-    if (nk_begin(ctx, "Server", nk_rect(0, 0, 600, 120), WINDOW_FLAGS)) {
-        if (window->chat_server) {
-            nk_layout_row_dynamic(ctx, 30, 1);
-            sprintf(buffer_label, "Server running at port %d", port);
-            nk_label(ctx, buffer_label, NK_TEXT_CENTERED);
-
-            nk_layout_row_dynamic(ctx, 30, 1);
-            if (nk_button_label(ctx, "Stop server")) {
-                pthread_mutex_lock(&window->arg.lock);
-                window->arg.running = false;
-                chat_server_delete(window->chat_server);
-                window->chat_server = NULL;
-                pthread_mutex_unlock(&window->arg.lock);
-            }
-        } else {
+    if (!window->chat_server) {
+        if (nk_begin(ctx, "Server", nk_rect(0, 0, 600, 120), WINDOW_FLAGS)) {
             float port_row_ratio[] = {0.5f, 0.5f};
 
             nk_layout_row(ctx, NK_DYNAMIC, 35, 2, port_row_ratio);
@@ -233,13 +224,23 @@ void server_window_draw(struct nk_context *ctx, ChatServerWindow *window)
                     pthread_create(&window->thread, NULL, thread_server_run, &window->arg);
                 }
             }
-
+            nk_end(ctx);
         }
-    }
-    nk_end(ctx);
+    } else {
+        if (nk_begin(ctx, "Server Manager", nk_rect(0, 0, 600, 800), WINDOW_FLAGS)) {
+            nk_layout_row_dynamic(ctx, 30, 1);
+            sprintf(buffer_label, "Server running at port %d", port);
+            nk_label(ctx, buffer_label, NK_TEXT_CENTERED);
 
-    if (window->chat_server) {
-        if (nk_begin(ctx, "Server Manager", nk_rect(0, 120, 600, 680), WINDOW_FLAGS)) {
+            nk_layout_row_dynamic(ctx, 30, 1);
+            if (nk_button_label(ctx, "Stop server")) {
+                pthread_mutex_lock(&window->arg.lock);
+                window->arg.running = false;
+                chat_server_delete(window->chat_server);
+                window->chat_server = NULL;
+                pthread_mutex_unlock(&window->arg.lock);
+            }
+
             if (nk_tree_push(ctx, NK_TREE_TAB, "Clients", NK_MINIMIZED)) {
                 for (int i = 0; i < server->clients_count; ++i) {
                     nk_layout_row_dynamic(ctx, 30, 2);
@@ -249,10 +250,9 @@ void server_window_draw(struct nk_context *ctx, ChatServerWindow *window)
                     }
                 }
 
-
                 nk_tree_pop(ctx);
             }
-            
+
             if (nk_tree_push(ctx, NK_TREE_TAB, "Status", NK_MINIMIZED)) {
                 ChatServerInfoList *info = &window->chat_server->info;
 
@@ -261,7 +261,10 @@ void server_window_draw(struct nk_context *ctx, ChatServerWindow *window)
 
                     switch (inf->type) {
                     case INFO_CLIENT_CHANGE_NAME:
-                        sprintf(buffer_label, "Client %s changed name to %s", inf->data1, inf->data2);
+                        sprintf(buffer_label,
+                                "Client %s changed name to %s",
+                                inf->data1,
+                                inf->data2);
                         nk_layout_row_dynamic(ctx, 30, 1);
                         nk_label_wrap(ctx, buffer_label);
                         break;
@@ -279,7 +282,9 @@ void server_window_draw(struct nk_context *ctx, ChatServerWindow *window)
                         break;
 
                     case INFO_CLIENT_DISCONNECTED:
-                        sprintf(buffer_label, "Client %s was disconnected from the chat", inf->data1);
+                        sprintf(buffer_label,
+                                "Client %s was disconnected from the chat",
+                                inf->data1);
                         nk_layout_row_dynamic(ctx, 30, 1);
                         nk_label_wrap(ctx, buffer_label);
                         break;
@@ -298,7 +303,9 @@ void server_window_draw(struct nk_context *ctx, ChatServerWindow *window)
                     int lines = ceilf(msgs->messages[i].msg_len / char_per_line);
                     int row_height = lines * 20;
                     nk_layout_row(ctx, NK_DYNAMIC, row_height, 2, (float[]) {0.15f, 0.75f});
-                    nk_label(ctx, msgs->messages[i].username, NK_TEXT_ALIGN_LEFT | NK_TEXT_ALIGN_TOP);
+                    nk_label(ctx,
+                             msgs->messages[i].username,
+                             NK_TEXT_ALIGN_LEFT | NK_TEXT_ALIGN_TOP);
                     nk_label_wrap(ctx, msgs->messages[i].msg);
                 }
 
