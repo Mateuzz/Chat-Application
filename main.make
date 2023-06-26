@@ -35,8 +35,8 @@ endef
 
 ifeq ($(config),debug_linux64)
 TARGETDIR = bin
-TARGET = $(TARGETDIR)/main
-OBJDIR = obj/Linux64/Debug/main
+TARGET = $(TARGETDIR)/Debug
+OBJDIR = obj/Linux64/Debug
 DEFINES += -DDEBUG
 ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -m64 -g -Wall -W -Wextra -Wpedantic
 ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m64 -g -Wall -W -Wextra -Wpedantic
@@ -44,8 +44,8 @@ ALL_LDFLAGS += $(LDFLAGS) -Llib -L/usr/lib64 -m64
 
 else ifeq ($(config),debug_linux32)
 TARGETDIR = bin
-TARGET = $(TARGETDIR)/main
-OBJDIR = obj/Linux32/Debug/main
+TARGET = $(TARGETDIR)/Debug
+OBJDIR = obj/Linux32/Debug
 DEFINES += -DDEBUG
 ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -m32 -g -Wall -W -Wextra -Wpedantic
 ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m32 -g -Wall -W -Wextra -Wpedantic
@@ -53,8 +53,8 @@ ALL_LDFLAGS += $(LDFLAGS) -Llib -L/usr/lib32 -m32
 
 else ifeq ($(config),debug_win64)
 TARGETDIR = bin
-TARGET = $(TARGETDIR)/main.exe
-OBJDIR = obj/Win64/Debug/main
+TARGET = $(TARGETDIR)/Debug.exe
+OBJDIR = obj/Win64/Debug
 DEFINES += -DDEBUG
 ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -m64 -g -Wall -W -Wextra -Wpedantic
 ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m64 -g -Wall -W -Wextra -Wpedantic
@@ -62,8 +62,8 @@ ALL_LDFLAGS += $(LDFLAGS) -Llib -L/usr/lib64 -m64
 
 else ifeq ($(config),debug_win32)
 TARGETDIR = bin
-TARGET = $(TARGETDIR)/main.exe
-OBJDIR = obj/Win32/Debug/main
+TARGET = $(TARGETDIR)/Debug.exe
+OBJDIR = obj/Win32/Debug
 DEFINES += -DDEBUG
 ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -m32 -g -Wall -W -Wextra -Wpedantic
 ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m32 -g -Wall -W -Wextra -Wpedantic
@@ -71,8 +71,8 @@ ALL_LDFLAGS += $(LDFLAGS) -Llib -L/usr/lib32 -m32
 
 else ifeq ($(config),release_linux64)
 TARGETDIR = bin
-TARGET = $(TARGETDIR)/main
-OBJDIR = obj/Linux64/Release/main
+TARGET = $(TARGETDIR)/Release
+OBJDIR = obj/Linux64/Release
 DEFINES += -DRELEASE
 ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -m64 -O2 -Wall -W -Wextra -Wpedantic
 ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m64 -O2 -Wall -W -Wextra -Wpedantic
@@ -80,8 +80,8 @@ ALL_LDFLAGS += $(LDFLAGS) -Llib -L/usr/lib64 -m64 -s
 
 else ifeq ($(config),release_linux32)
 TARGETDIR = bin
-TARGET = $(TARGETDIR)/main
-OBJDIR = obj/Linux32/Release/main
+TARGET = $(TARGETDIR)/Release
+OBJDIR = obj/Linux32/Release
 DEFINES += -DRELEASE
 ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -m32 -O2 -Wall -W -Wextra -Wpedantic
 ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m32 -O2 -Wall -W -Wextra -Wpedantic
@@ -89,21 +89,21 @@ ALL_LDFLAGS += $(LDFLAGS) -Llib -L/usr/lib32 -m32 -s
 
 else ifeq ($(config),release_win64)
 TARGETDIR = bin
-TARGET = $(TARGETDIR)/main.exe
-OBJDIR = obj/Win64/Release/main
+TARGET = $(TARGETDIR)/Release.exe
+OBJDIR = obj/Win64/Release
 DEFINES += -DRELEASE
 ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -m64 -O2 -Wall -W -Wextra -Wpedantic
 ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m64 -O2 -Wall -W -Wextra -Wpedantic
-ALL_LDFLAGS += $(LDFLAGS) -Llib -L/usr/lib64 -m64 -s
+ALL_LDFLAGS += $(LDFLAGS) -Llib -L/usr/lib64 -m64 -mwindows -s
 
 else ifeq ($(config),release_win32)
 TARGETDIR = bin
-TARGET = $(TARGETDIR)/main.exe
-OBJDIR = obj/Win32/Release/main
+TARGET = $(TARGETDIR)/Release.exe
+OBJDIR = obj/Win32/Release
 DEFINES += -DRELEASE
 ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -m32 -O2 -Wall -W -Wextra -Wpedantic
 ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m32 -O2 -Wall -W -Wextra -Wpedantic
-ALL_LDFLAGS += $(LDFLAGS) -Llib -L/usr/lib32 -m32 -s
+ALL_LDFLAGS += $(LDFLAGS) -Llib -L/usr/lib32 -m32 -mwindows -s
 
 endif
 

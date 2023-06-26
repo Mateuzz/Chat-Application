@@ -37,4 +37,4 @@ workspace "chat"
 
     project "main"
         files {"src/**.c", "src/**.h"}
-        targetname "main"
+        targetname "%{cfg.buildcfg}"
