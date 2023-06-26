@@ -1,33 +1,98 @@
 #include "chat_server.h"
 #include "chat_common.h"
 
-static ChatMessage g_message_out;
-
-static void
-process_client_message(ChatClient *client, ChatClient *clients, int clients_count)
+static void send_message(ChatServer *chat, ChatMessage *message, ChatClient *client)
 {
-    client->status = CLIENT_STATUS_ACTIVE;
+    send(client->socket.fd, message, sizeof(ChatMessage), 0);
 
-    switch (client->message_buffer.type) {
-    case CHAT_MESSAGE_CLIENT_CHANGE_INFO:
-        for (int i = 0; i < clients_count; ++i)
-            if (strcmp(client->message_buffer.username, clients[i].username) == 0) {
-                PRINT_DEBUG("Server: Requisição negada: %s Tentando mudar para nome do cliente %s\n", client->username, clients[i].username);
-            }
+    ChatServerInfo *info = &chat->info.data[chat->info.count];
+    info->type = INFO_TYPE_NONE;
 
-        PRINT_DEBUG("Server: Username do cliente %s mudado para %s\n", client->username, client->message_buffer.username);
-        strcpy(client->username, client->message_buffer.username);
+    switch (message->type) {
+    case CHAT_MESSAGE_CLIENT_END_CONNECTION:
+        info->type = INFO_CLIENT_DISCONNECTED;
         break;
 
-    case CHAT_MESSAGE_CLIENT_MESSAGE:
-        PRINT_DEBUG("Server: %s enviou: %s\n",
+    case CHAT_MESSAGE_SERVER_ACCEPTED:
+        info->type = INFO_CLIENT_ACCEPTED;
+        break;
+
+    case CHAT_MESSAGE_SERVER_REFUSED:
+        info->type = INFO_CLIENT_REFUSED;
+        break;
+
+    case CHAT_MESSAGE_SERVER_BAN:
+        info->type = INFO_CLIENT_BANNED;
+        break;
+
+    case CHAT_MESSAGE_SERVER_CHECK_ALIVE:
+        info->type = INFO_CLIENT_CHECKING_ALIVE;
+        break;
+    }
+
+    if (info->type != INFO_TYPE_NONE) {
+        ++chat->info.count;
+        strcpy(info->data1, client->username);
+    }
+}
+
+static int update_server_info(ChatServer* chat, enum ServerInfoType type, const char *data1, const char *data2, int flag)
+{
+    if (chat->info.count == SERVER_INFO_BUFFER_SIZE) {
+        return -1;
+    }
+
+    ChatServerInfo *info = &chat->info.data[chat->info.count];
+    if (data1) {
+        strcpy(info->data1, data1);
+    }
+    if (data2) {
+        strcpy(info->data2, data2);
+    }
+    info->flag = flag;
+    info->type = type;
+
+    ++chat->info.count;
+
+    return 0;
+}
+
+static void process_client_message(ChatServer* chat, ChatClient *client)
+{
+    client->status = CLIENT_STATUS_ACTIVE;
+    ChatClient *clients = chat->clients;
+    int clients_count = chat->clients_count;
+    ChatServerInfo *info = &chat->info.data[chat->info.count];
+
+    switch (client->message_buffer.type) {
+    case CHAT_MESSAGE_CLIENT_CHANGE_INFO: {
+        const char *new_username = client->message_buffer.username;
+
+        for (int i = 0; i < clients_count; ++i)
+            if (strcmp(new_username, clients[i].username) == 0) {
+                PRINT_DEBUG(
+                    "Server: Requisição negada: %s Tentando mudar para nome do cliente %s\n",
                     client->username,
-                    client->message_buffer.msg);
+                    clients[i].username);
+                return;
+            }
+
+        update_server_info(chat, INFO_CLIENT_CHANGE_NAME, client->username, new_username, 0);
+
+        PRINT_DEBUG("Server: Username do cliente %s mudado para %s\n",
+                    client->username,
+                    client->message_buffer.username);
+        strcpy(client->username, client->message_buffer.username);
+    } break;
+
+    case CHAT_MESSAGE_CLIENT_MESSAGE:
+        PRINT_DEBUG("Server: %s enviou: %s\n", client->username, client->message_buffer.msg);
 
         strcpy(client->message_buffer.username, client->username);
         for (int i = 0; i < clients_count; ++i) {
-            send(clients[i].fd, &client->message_buffer, sizeof(client->message_buffer), 0);
+            send_message(chat, &client->message_buffer, &clients[i]);
         }
+        message_list_add(&chat->received, &client->message_buffer);
         break;
 
     case CHAT_MESSAGE_CLIENT_END_CONNECTION:
@@ -36,6 +101,7 @@ process_client_message(ChatClient *client, ChatClient *clients, int clients_coun
         break;
 
     case CHAT_MESSAGE_CLIENT_ALIVE:
+        update_server_info(chat, INFO_CLIENT_CONFIRMED_ALIVE, client->username, NULL, 0);
         PRINT_DEBUG("Server: Client %s ainda esta vivo\n", client->username);
         break;
 
@@ -50,17 +116,18 @@ void chat_server_update(ChatServer *chat)
     int clients_count = chat->clients_count;
     ChatClient *clients = chat->clients;
     ChatClient *cl = &chat->clients[clients_count];
+    static char buffer[USERNAME_MAX + 1];
 
     // try accept new client (async)
-    if ((cl->fd = accept(fd, (struct sockaddr *)&cl->addr, &chat->addrlen)) > 0) {
-        g_message_out.type = CHAT_MESSAGE_SERVER_ACCEPTED;
-        sprintf(g_message_out.username, "Convidado00%d", clients_count);
-        send(cl->fd, &g_message_out, sizeof(ChatMessage), 0);
+    if ((cl->socket.fd = accept(fd, (struct sockaddr *)&cl->socket.addr, &chat->addrlen)) > 0) {
+        sprintf(buffer, "Convidado00%d", clients_count);
+        chat_message_make( &chat->message_buffer, CHAT_MESSAGE_SERVER_ACCEPTED, NULL, 0);
+        strcpy(cl->username, buffer);
+        send_message(chat, &chat->message_buffer, cl);
 
-        fcntl(cl->fd, F_SETFL, O_NONBLOCK);
+        fcntl(cl->socket.fd, F_SETFL, O_NONBLOCK);
         cl->current_message_bytes_read = 0;
         cl->status = CLIENT_STATUS_ACTIVE;
-        strcpy(cl->username, g_message_out.username);
         ++chat->clients_count;
 
         PRINT_DEBUG("Server: Cliente %s adicionado\n", cl->username);
@@ -71,12 +138,13 @@ void chat_server_update(ChatServer *chat)
         ChatClient *client = &clients[i];
         int error = 0;
         socklen_t len = sizeof(error);
-        int retval = getsockopt(client->fd, SOL_SOCKET, SO_ERROR, &error, &len);
+        int retval = getsockopt(client->socket.fd, SOL_SOCKET, SO_ERROR, &error, &len);
 
         if (retval == 0 && error != 0) {
-            PRINT_DEBUG("Server: Não é possivel mandar mensagem para %s, removendo\n", client->username);
+            PRINT_DEBUG("Server: Não é possivel mandar mensagem para %s, removendo\n",
+                        client->username);
             client->status = CLIENT_STATUS_INACTIVE;
-        } else if (read_socket_message(client->fd,
+        } else if (read_socket_message(client->socket.fd,
                                        &client->message_buffer,
                                        &client->current_message_bytes_read,
                                        sizeof(client->message_buffer)) <= 0) {
@@ -91,8 +159,8 @@ void chat_server_update(ChatServer *chat)
             case CLIENT_STATUS_NON_RESPONDING:
                 if (clock() - client->timeout_start >= TIMEOUT_WARN_USER) {
                     PRINT_DEBUG("Server: Client %s deu timeout, mandando aviso\n", client->username);
-                    g_message_out.type = CHAT_MESSAGE_SERVER_CHECK_ALIVE;
-                    send(client->fd, &g_message_out, sizeof(ChatMessage), 0);
+                    chat_message_make(&chat->message_buffer, CHAT_MESSAGE_SERVER_CHECK_ALIVE, NULL, 0);
+                    send_message(chat, &chat->message_buffer, client);
                     client->status = CLIENT_STATUS_TIMEOUT_WAITING;
                 }
                 break;
@@ -111,21 +179,21 @@ void chat_server_update(ChatServer *chat)
             // We get a message from client, process it
             if (client->current_message_bytes_read == sizeof(client->message_buffer)) {
                 client->current_message_bytes_read = 0;
-                process_client_message(client, clients, clients_count);
-                message_list_add(&chat->received, &client->message_buffer);
+                process_client_message(chat, clients);
             }
         }
     }
 
     for (int i = 0; i < clients_count; ++i) {
         if (clients[i].status == CLIENT_STATUS_INACTIVE) {
+            update_server_info(chat, INFO_CLIENT_DISCONNECTED, clients[i].username, NULL, 0);
             clients[i] = clients[clients_count - 1];
             --chat->clients_count;
         }
     }
 }
 
-int chat_server_get_user_index(ChatServer* chat, const char *name)
+int chat_server_get_user_index(ChatServer *chat, const char *name)
 {
     for (int i = 0; i < chat->clients_count; ++i) {
         if (strcmp(name, chat->clients[i].username) == 0) {
@@ -135,17 +203,18 @@ int chat_server_get_user_index(ChatServer* chat, const char *name)
     return -1;
 }
 
-int chat_server_ban_user(ChatServer* chat, int user_index)
+int chat_server_ban_user(ChatServer *chat, int user_index)
 {
+    ChatClient *cl = &chat->clients[user_index];
     if (user_index >= chat->clients_count) {
         return -1;
     }
 
-    g_message_out.type = CHAT_MESSAGE_SERVER_BAN;
-    send(chat->clients[user_index].fd, &g_message_out, sizeof(ChatMessage), 0);
+    chat_message_make(&chat->message_buffer, CHAT_MESSAGE_SERVER_BAN, NULL, 0);
+    send_message(chat, &chat->message_buffer, cl);
 
-    PRINT_DEBUG("Server: Client %s has been banned\n", chat->clients[user_index].username);
-    chat->clients[user_index].status = CLIENT_STATUS_INACTIVE;
+    PRINT_DEBUG("Server: Client %s has been banned\n", cl->username);
+    cl->status = CLIENT_STATUS_INACTIVE;
 
     return 0;
 }
@@ -154,7 +223,7 @@ ChatServer *chat_server_create(int port)
 {
     ChatServer *chat = malloc(sizeof(ChatServer));
     if (!chat ||
-            init_server(&chat->socket, AF_INET, SOCK_STREAM, port, INADDR_ANY, MAX_CONNECTIONS) !=
+        init_server(&chat->socket, AF_INET, SOCK_STREAM, port, INADDR_ANY, MAX_CONNECTIONS) !=
             SERVER_INIT_SUCESS) {
         free(chat);
         return NULL;
@@ -163,6 +232,7 @@ ChatServer *chat_server_create(int port)
     chat->addrlen = sizeof(struct sockaddr_in);
     chat->clients_count = 0;
     chat->port = port;
+    chat->info.count = 0;
 
     signal(SIGPIPE, SIG_IGN);
     fcntl(chat->socket.fd, F_SETFL, O_NONBLOCK);
@@ -177,40 +247,11 @@ ChatServer *chat_server_create(int port)
 void chat_server_delete(ChatServer *chat)
 {
     PRINT_DEBUG("Server: Server de porta %d encerrado\n", chat->port);
-    ChatMessage out = { .type = CHAT_MESSAGE_SERVER_ENDED };
+    ChatMessage out = {.type = CHAT_MESSAGE_SERVER_ENDED};
     for (int i = 0; i < chat->clients_count; ++i) {
-        send(chat->clients[i].fd, &out, sizeof(out), 0);
+        send(chat->clients[i].socket.fd, &out, sizeof(out), 0);
     }
     message_list_deinit(&chat->received);
     close_socket(&chat->socket);
     free(chat);
-}
-
-int message_list_init(MessageList *list, int max_messages)
-{
-    if (!(list->messages = malloc(sizeof(ChatMessage) * max_messages)))
-        return -1;
-    list->max = max_messages;
-    list->count = 0;
-    return 0;
-}
-
-void message_list_deinit(MessageList *list)
-{
-    free(list->messages);
-    list->messages = NULL;
-}
-
-int message_list_add(MessageList *list, const ChatMessage *message)
-{
-    if (list->count > list->max) {
-        list->max *= 2;
-        if (!(list->messages = realloc(list->messages, sizeof(ChatMessage) * list->max))) {
-            return -1;
-        }
-    }
-
-    list->messages[list->count++] = *message;
-
-    return 0;
 }

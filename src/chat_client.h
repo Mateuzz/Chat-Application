@@ -13,7 +13,11 @@
 
 typedef struct ChatUser {
     enum ChatUserStatus {
+        CHAT_USER_STATUS_NONE,
         CHAT_USER_STATUS_DISCONNECTED,
+        CHAT_USER_STATUS_FAILED,
+        CHAT_USER_STATUS_BANNED,
+        CHAT_USER_STATUS_REFUSED,
         CHAT_USER_STATUS_NON_CONFIRMED,
         CHAT_USER_STATUS_CONNECTED,
     } status;
