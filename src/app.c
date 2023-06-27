@@ -37,6 +37,7 @@ static InputResult handle_input(App *app)
     nk_input_end(app->ctx);
 
     SDL_GetWindowSize(app->window, &app->win_width, &app->win_height);
+    glViewport(0, 0, app->win_width, app->win_height);
 
     return INPUT_RESULT_NONE;
 }
@@ -48,7 +49,6 @@ static void render_buffer(App *app)
     glClearColor(bg.r, bg.g, bg.b, bg.a);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    glViewport(0, 0, app->win_width, app->win_height);
     nk_sdl_render(NK_ANTI_ALIASING_ON, MAX_VERTEX_MEMORY, MAX_ELEMENT_MEMORY);
     SDL_GL_SwapWindow(app->window);
 }
@@ -56,7 +56,7 @@ static void render_buffer(App *app)
 static void process_server(App *app)
 {
     ChatServerWindow* window = &app->chat_server_window;
-    server_window_draw(app->ctx, window);
+    server_window_draw(app->ctx, window, app->win_width, app->win_height);
 }
 
 static void process_user(App *app)
@@ -127,7 +127,7 @@ static void process_user(App *app)
         break;
     }
 
-    user_window_draw(app->ctx, &app->chat_user_window); 
+    user_window_draw(app->ctx, &app->chat_user_window, app->win_width, app->win_height); 
 }
 
 App *app_create()
@@ -178,6 +178,8 @@ App *app_create()
         nk_sdl_font_stash_begin(&atlas);
         nk_sdl_font_stash_end();
     }
+
+    set_style(app->ctx, THEME_DARK);
 
     server_window_init(&app->chat_server_window);
     user_window_init(&app->chat_user_window, 200);

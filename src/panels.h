@@ -29,6 +29,6 @@ void server_window_init(ChatServerWindow *window);
 void user_window_deinit(ChatUserWindow *window);
 void server_window_deinit(ChatServerWindow *window);
 
-void server_window_draw(struct nk_context *ctx, ChatServerWindow *window);
-void user_window_draw(struct nk_context *ctx, ChatUserWindow *window);
+void server_window_draw(struct nk_context *ctx, ChatServerWindow *window, int ww, int wh);
+void user_window_draw(struct nk_context *ctx, ChatUserWindow *window, int ww, int wh);
 

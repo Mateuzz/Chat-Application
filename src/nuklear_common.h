@@ -13,3 +13,4 @@
 
 #include <nuklear/nuklear.h>
 #include <nuklear/nuklear_sdl_gl3.h>
+#include <nuklear/demo/style.c>
