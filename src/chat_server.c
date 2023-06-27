@@ -60,6 +60,8 @@ static int update_server_info(ChatServer* chat, enum ServerInfoType type, const 
         strcpy(info->data2, data2);
     }
 
+    info->type = type;
+    info->flag = flag;
 
     ++chat->info.count;
 
