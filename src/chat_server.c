@@ -75,7 +75,7 @@ static void process_client_message(ChatServer* chat, ChatClient *client)
 
     switch (client->message_buffer.type) {
     case CHAT_MESSAGE_CLIENT_CHANGE_INFO: {
-        PRINT_DEBUG("Servidor recebeu Message::CLIENT_CHANGE_INFO");
+        PRINT_DEBUG("Servidor recebeu Message::CLIENT_CHANGE_INFO\n");
         const char *new_username = client->message_buffer.username;
 
         for (int i = 0; i < clients_count; ++i) {
