@@ -3,6 +3,7 @@
 #include "chat_common.h"
 #include "chat_server.h"
 #include "nuklear/src/nuklear.h"
+#include <bits/getopt_core.h>
 #include <pthread.h>
 #include <signal.h>
 
@@ -94,7 +95,10 @@ void user_window_draw(struct nk_context *ctx, ChatUserWindow *window, int ww, in
                            nk_filter_ascii);
 
             nk_layout_row_dynamic(ctx, 30, 1);
-            if (nk_button_label(ctx, "Join Chat")) {
+            bool enter_pressed =
+                nk_window_has_focus(ctx) && ctx->input.keyboard.keys[NK_KEY_ENTER].clicked;
+
+            if (nk_button_label(ctx, "Join Chat") || enter_pressed) {
                 if (username_len == 0) {
                     flags |= FLAG_USERNAME_EMPTY;
                 } else {
@@ -154,7 +158,7 @@ void user_window_draw(struct nk_context *ctx, ChatUserWindow *window, int ww, in
 
         if (nk_begin(ctx, "Chat Prompt", nk_rect(600, 0, width, height), WINDOW_FLAGS)) {
             nk_layout_row_dynamic(ctx, height - 150, 1);
-            if (nk_group_begin(ctx, "Messages", NK_WINDOW_BORDER | NK_WINDOW_TITLE)) {
+            if (nk_group_begin(ctx, "Messages", WINDOW_FLAGS)) {
                 w_width = nk_window_get_width(ctx);
 
                 float char_per_line = w_width * 0.8f / 8.3f;
@@ -181,7 +185,10 @@ void user_window_draw(struct nk_context *ctx, ChatUserWindow *window, int ww, in
                            MESSAGE_MAX,
                            nk_filter_default);
 
-            if (nk_button_label(ctx, "Send Message") && msg_len > 0) {
+            bool enter_pressed =
+                nk_window_has_focus(ctx) && ctx->input.keyboard.keys[NK_KEY_ENTER].clicked;
+
+            if ((nk_button_label(ctx, "Send Message") || enter_pressed) && msg_len > 0) {
                 PRINT_DEBUG("Message size is %d\n", msg_len);
                 chat_message_make_and_send(&user->socket,
                                            &message_buffer,
@@ -228,7 +235,11 @@ void server_window_draw(struct nk_context *ctx, ChatServerWindow *window, int ww
 
             nk_layout_row(ctx, NK_DYNAMIC, 35, 2, port_row_ratio);
             nk_property_int(ctx, "Port", 0, &port, 65535, 1, 1);
-            if (nk_button_label(ctx, "Create chat group")) {
+
+            bool enter_pressed =
+                nk_window_has_focus(ctx) && ctx->input.keyboard.keys[NK_KEY_ENTER].clicked;
+
+            if (nk_button_label(ctx, "Create chat group") || enter_pressed) {
                 if ((window->chat_server = chat_server_create(port))) {
                     window->arg.running = true;
                     window->arg.chat_server = window->chat_server;
@@ -251,27 +262,25 @@ void server_window_draw(struct nk_context *ctx, ChatServerWindow *window, int ww
                 return;
             }
 
-            static int options[3] = {true};
-            static char *names[3] = {"Messages", "Server info", "Members"};
-            static enum Tab { TAB_MESSAGES, TAB_INFO, TAB_MEMBERS, TAB_COUNT } tab;
+            static char *tabs[3] = {"Messages", "Server info", "Members"};
+            static enum Tab { TAB_MESSAGES, TAB_INFO, TAB_MEMBERS, TAB_COUNT } tab_selected;
 
             nk_layout_row_dynamic(ctx, 35, 1);
             if (nk_group_begin(ctx, "Tab", NK_WINDOW_NO_SCROLLBAR)) {
                 nk_layout_row_static(ctx, 25, 100, TAB_COUNT);
                 for (int i = 0; i < TAB_COUNT; ++i) {
-                    if (nk_selectable_label(ctx, names[i], NK_TEXT_CENTERED, &options[i])) {
-                        for (int i = 0; i < TAB_COUNT; ++i) {
-                            options[i] = false;
-                        }
-                        options[i] = true;
-                        tab = i;
+                    int non_selected = 0;
+                    int selected = 1;
+                    int *select_status = (i == tab_selected) ? &selected : &non_selected;
+                    if (nk_selectable_label(ctx, tabs[i], NK_TEXT_CENTERED, select_status)) {
+                        tab_selected = i;
                     }
                 }
 
                 nk_group_end(ctx);
             }
 
-            switch (tab) {
+            switch (tab_selected) {
             case TAB_MESSAGES:
                 nk_layout_row_dynamic(ctx, height - 165, 1);
                 if (nk_group_begin(ctx, "User Messages", WINDOW_FLAGS)) {
@@ -282,60 +291,65 @@ void server_window_draw(struct nk_context *ctx, ChatServerWindow *window, int ww
                     for (size_t i = 0; i < msgs->count; ++i) {
                         int lines = ceilf(msgs->messages[i].msg_len / char_per_line);
                         int row_height = lines * 20;
-                        nk_layout_row(ctx, NK_DYNAMIC, row_height, 3, (float[]) {0.15f, 0.05f, 0.75f});
+                        nk_layout_row(ctx,
+                                      NK_DYNAMIC,
+                                      row_height,
+                                      3,
+                                      (float[]) {0.15f, 0.05f, 0.75f});
                         nk_label(ctx,
-                                msgs->messages[i].username,
-                                NK_TEXT_ALIGN_TOP | NK_TEXT_ALIGN_LEFT);
+                                 msgs->messages[i].username,
+                                 NK_TEXT_ALIGN_TOP | NK_TEXT_ALIGN_LEFT);
                         nk_label(ctx, " : ", NK_TEXT_ALIGN_LEFT | NK_TEXT_ALIGN_TOP);
                         nk_label_wrap(ctx, msgs->messages[i].msg);
                     }
 
                     nk_group_end(ctx);
-                } break;
+                }
+                break;
 
             case TAB_INFO: {
-                    ChatServerInfoList *info = &window->chat_server->info;
+                ChatServerInfoList *info = &window->chat_server->info;
 
-                    for (int i = 0; i < info->count; ++i) {
-                        ChatServerInfo *inf = &info->data[i];
+                for (int i = 0; i < info->count; ++i) {
+                    ChatServerInfo *inf = &info->data[i];
 
-                        switch (inf->type) {
-                        case INFO_CLIENT_CHANGE_NAME:
-                            sprintf(buffer_label,
-                                    "Client %s changed name to %s",
-                                    inf->data1,
-                                    inf->data2);
-                            nk_layout_row_dynamic(ctx, 30, 1);
-                            nk_label_wrap(ctx, buffer_label);
-                            break;
+                    switch (inf->type) {
+                    case INFO_CLIENT_CHANGE_NAME:
+                        sprintf(buffer_label,
+                                "Client %s changed name to %s",
+                                inf->data1,
+                                inf->data2);
+                        nk_layout_row_dynamic(ctx, 30, 1);
+                        nk_label_wrap(ctx, buffer_label);
+                        break;
 
-                        case INFO_CLIENT_BANNED:
-                            sprintf(buffer_label, "Client %s was banned", inf->data1);
-                            nk_layout_row_dynamic(ctx, 30, 1);
-                            nk_label_wrap(ctx, buffer_label);
-                            break;
+                    case INFO_CLIENT_BANNED:
+                        sprintf(buffer_label, "Client %s was banned", inf->data1);
+                        nk_layout_row_dynamic(ctx, 30, 1);
+                        nk_label_wrap(ctx, buffer_label);
+                        break;
 
-                        case INFO_CLIENT_ACCEPTED:
-                            sprintf(buffer_label, "Client %s entered chat", inf->data1);
-                            nk_layout_row_dynamic(ctx, 30, 1);
-                            nk_label_wrap(ctx, buffer_label);
-                            break;
+                    case INFO_CLIENT_ACCEPTED:
+                        sprintf(buffer_label, "Client %s entered chat", inf->data1);
+                        nk_layout_row_dynamic(ctx, 30, 1);
+                        nk_label_wrap(ctx, buffer_label);
+                        break;
 
-                        case INFO_CLIENT_DISCONNECTED:
-                            sprintf(buffer_label,
-                                    "Client %s was disconnected from the chat",
-                                    inf->data1);
-                            nk_layout_row_dynamic(ctx, 30, 1);
-                            nk_label_wrap(ctx, buffer_label);
-                            break;
-                        }
+                    case INFO_CLIENT_DISCONNECTED:
+                        sprintf(buffer_label,
+                                "Client %s was disconnected from the chat",
+                                inf->data1);
+                        nk_layout_row_dynamic(ctx, 30, 1);
+                        nk_label_wrap(ctx, buffer_label);
+                        break;
                     }
+                }
             } break;
 
             case TAB_MEMBERS:
                 for (int i = 0; i < window->chat_server->clients_count; ++i) {
                     nk_layout_row_dynamic(ctx, 30, 2);
-                    nk_label(ctx, window->chat_server->clients[i].username, NK_TEXT_ALIGN_LEFT);
+                    nk_label(ctx, window->chat_server->clients[i].username, NK_TEXT_CENTERED);
                     if (nk_button_label(ctx, "Ban")) {
                         chat_server_ban_user(window->chat_server, i);
                     }

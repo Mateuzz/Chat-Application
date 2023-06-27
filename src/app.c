@@ -55,79 +55,60 @@ static void render_buffer(App *app)
 
 static void process_server(App *app)
 {
-    ChatServerWindow* window = &app->chat_server_window;
+    ChatServerWindow *window = &app->chat_server_window;
     server_window_draw(app->ctx, window, app->win_width, app->win_height);
 }
 
 static void process_user(App *app)
 {
-    ChatUserWindow* window = &app->chat_user_window;
-    ChatUser* user = window->chat_user;
+    ChatUserWindow *window = &app->chat_user_window;
+    ChatUser *user = window->chat_user;
 
-    switch (user->status) {
-    case CHAT_USER_STATUS_NONE:
-    case CHAT_USER_STATUS_DISCONNECTED:
-    case CHAT_USER_STATUS_BANNED:
-    case CHAT_USER_STATUS_REFUSED:
-    case CHAT_USER_STATUS_FAILED:
+    chat_user_process_messages(user);
+
+    if (chat_user_message_ready(user) != CHAT_USER_MESSAGE_READY) {
+        user_window_draw(app->ctx, &app->chat_user_window, app->win_width, app->win_height);
+        return;
+    }
+
+    ChatMessage *msg = get_next_message(user);
+
+    switch (msg->type) {
+    case CHAT_MESSAGE_CLIENT_MESSAGE:
+        PRINT_DEBUG("AppUser: Mensagem do servidor recebida\n");
+        message_list_add(&window->messages, msg);
         break;
 
-    case CHAT_USER_STATUS_NON_CONFIRMED:
-        while (chat_user_process_messages(user) > 0) {
-            if (chat_user_message_ready(user) == CHAT_USER_MESSAGE_READY) {
-                ChatMessage *msg = get_next_message(user);
-
-                switch (msg->type) {
-                case CHAT_MESSAGE_CLIENT_MESSAGE:
-                    PRINT_DEBUG("AppUser: Mensagem do servidor recebida\n");
-                    message_list_add(&window->messages, msg);
-                    break;
-
-                case CHAT_MESSAGE_SERVER_ACCEPTED:
-                    PRINT_DEBUG("AppUser: Cliente %s foi aceito pelo server\n", msg->username);
-                    strcpy(user->username, msg->username);
-                    user->status = CHAT_USER_STATUS_CONNECTED;
-                    break;
-
-                case CHAT_MESSAGE_SERVER_REFUSED:
-                    PRINT_DEBUG("AppUser: Cliente foi negado pelo server\n", msg->username);
-                    chat_user_disconnect(user, CHAT_USER_STATUS_REFUSED);
-                    break;
-                }
-            }
-        }
+    case CHAT_MESSAGE_SERVER_ACCEPTED:
+        PRINT_DEBUG("AppUser: Cliente %s foi aceito pelo server\n", msg->username);
+        strcpy(user->username, msg->username);
+        user->status = CHAT_USER_STATUS_CONNECTED;
         break;
 
-    case CHAT_USER_STATUS_CONNECTED:
-        while (chat_user_process_messages(user) > 0) {
-            if (chat_user_message_ready(user) == CHAT_USER_MESSAGE_READY) {
-                ChatMessage *msg = get_next_message(user);
+    case CHAT_MESSAGE_SERVER_REFUSED:
+        PRINT_DEBUG("AppUser: Cliente foi negado pelo server\n", msg->username);
+        chat_user_disconnect(user, CHAT_USER_STATUS_REFUSED);
+        break;
 
-                switch (msg->type) {
-                case CHAT_MESSAGE_CLIENT_MESSAGE:
-                    PRINT_DEBUG("AppUser: Mensagem do servidor recebida\n");
-                    message_list_add(&window->messages, msg);
-                    break;
+    case CHAT_MESSAGE_SERVER_CHECK_ALIVE:
+        chat_message_make_and_send(&user->socket,
+                                   &g_message_buffer,
+                                   CHAT_MESSAGE_CLIENT_ALIVE,
+                                   NULL,
+                                   0);
+        break;
 
-                case CHAT_MESSAGE_SERVER_CHECK_ALIVE:
-                    chat_message_make_and_send(&user->socket, &g_message_buffer, CHAT_MESSAGE_CLIENT_ALIVE, NULL, 0);
-                    break;
+    case CHAT_MESSAGE_SERVER_BAN:
+        chat_user_disconnect(user, CHAT_USER_STATUS_BANNED);
+        break;
 
-                case CHAT_MESSAGE_SERVER_BAN:
-                    chat_user_disconnect(user, CHAT_USER_STATUS_BANNED);
-                    break;
-
-                case CHAT_MESSAGE_SERVER_ENDED:
-                    PRINT_DEBUG("Appuser: Cliente foi terminado\n");
-                    chat_user_disconnect(user, CHAT_USER_STATUS_DISCONNECTED);
-                    break;
-                }
-            }
-        }
+    case CHAT_MESSAGE_SERVER_ENDED:
+        PRINT_DEBUG("Appuser: Cliente foi terminado\n");
+        chat_user_disconnect(user, CHAT_USER_STATUS_DISCONNECTED);
         break;
     }
 
-    user_window_draw(app->ctx, &app->chat_user_window, app->win_width, app->win_height); 
+    user_window_draw(app->ctx, &app->chat_user_window, app->win_width, app->win_height);
 }
 
 App *app_create()
@@ -148,7 +129,7 @@ App *app_create()
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
-    app->window = SDL_CreateWindow("Demo",
+    app->window = SDL_CreateWindow("Chat Application",
                                    SDL_WINDOWPOS_CENTERED,
                                    SDL_WINDOWPOS_CENTERED,
                                    WINDOW_WIDTH,
