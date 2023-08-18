@@ -14,23 +14,11 @@ ifeq ($(config),debug_linux64)
 else ifeq ($(config),debug_linux32)
   main_config = debug_linux32
 
-else ifeq ($(config),debug_win64)
-  main_config = debug_win64
-
-else ifeq ($(config),debug_win32)
-  main_config = debug_win32
-
 else ifeq ($(config),release_linux64)
   main_config = release_linux64
 
 else ifeq ($(config),release_linux32)
   main_config = release_linux32
-
-else ifeq ($(config),release_win64)
-  main_config = release_win64
-
-else ifeq ($(config),release_win32)
-  main_config = release_win32
 
 else
   $(error "invalid configuration $(config)")
@@ -57,12 +45,8 @@ help:
 	@echo "CONFIGURATIONS:"
 	@echo "  debug_linux64"
 	@echo "  debug_linux32"
-	@echo "  debug_win64"
-	@echo "  debug_win32"
 	@echo "  release_linux64"
 	@echo "  release_linux32"
-	@echo "  release_win64"
-	@echo "  release_win32"
 	@echo ""
 	@echo "TARGETS:"
 	@echo "   all (default)"

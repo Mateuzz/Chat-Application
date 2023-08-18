@@ -19,6 +19,8 @@ endif
 # #############################################
 
 RESCOMP = windres
+TARGETDIR = bin
+TARGET = $(TARGETDIR)/main
 INCLUDES += -Isrc -Ivendor
 FORCE_INCLUDE +=
 ALL_CPPFLAGS += $(CPPFLAGS) -MD -MP $(DEFINES) $(INCLUDES)
@@ -34,76 +36,32 @@ define POSTBUILDCMDS
 endef
 
 ifeq ($(config),debug_linux64)
-TARGETDIR = bin
-TARGET = $(TARGETDIR)/Debug
 OBJDIR = obj/Linux64/Debug
 DEFINES += -DDEBUG
 ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -m64 -g -Wall -W -Wextra -Wpedantic
 ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m64 -g -Wall -W -Wextra -Wpedantic
-ALL_LDFLAGS += $(LDFLAGS) -Llib -L/usr/lib64 -m64
+ALL_LDFLAGS += $(LDFLAGS) -L/usr/lib64 -m64
 
 else ifeq ($(config),debug_linux32)
-TARGETDIR = bin
-TARGET = $(TARGETDIR)/Debug
 OBJDIR = obj/Linux32/Debug
 DEFINES += -DDEBUG
 ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -m32 -g -Wall -W -Wextra -Wpedantic
 ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m32 -g -Wall -W -Wextra -Wpedantic
-ALL_LDFLAGS += $(LDFLAGS) -Llib -L/usr/lib32 -m32
-
-else ifeq ($(config),debug_win64)
-TARGETDIR = bin
-TARGET = $(TARGETDIR)/Debug.exe
-OBJDIR = obj/Win64/Debug
-DEFINES += -DDEBUG
-ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -m64 -g -Wall -W -Wextra -Wpedantic
-ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m64 -g -Wall -W -Wextra -Wpedantic
-ALL_LDFLAGS += $(LDFLAGS) -Llib -L/usr/lib64 -m64
-
-else ifeq ($(config),debug_win32)
-TARGETDIR = bin
-TARGET = $(TARGETDIR)/Debug.exe
-OBJDIR = obj/Win32/Debug
-DEFINES += -DDEBUG
-ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -m32 -g -Wall -W -Wextra -Wpedantic
-ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m32 -g -Wall -W -Wextra -Wpedantic
-ALL_LDFLAGS += $(LDFLAGS) -Llib -L/usr/lib32 -m32
+ALL_LDFLAGS += $(LDFLAGS) -L/usr/lib32 -m32
 
 else ifeq ($(config),release_linux64)
-TARGETDIR = bin
-TARGET = $(TARGETDIR)/Release
 OBJDIR = obj/Linux64/Release
-DEFINES += -DRELEASE
+DEFINES += -DNDEBUG
 ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -m64 -O2 -Wall -W -Wextra -Wpedantic
 ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m64 -O2 -Wall -W -Wextra -Wpedantic
-ALL_LDFLAGS += $(LDFLAGS) -Llib -L/usr/lib64 -m64 -s
+ALL_LDFLAGS += $(LDFLAGS) -L/usr/lib64 -m64 -s
 
 else ifeq ($(config),release_linux32)
-TARGETDIR = bin
-TARGET = $(TARGETDIR)/Release
 OBJDIR = obj/Linux32/Release
-DEFINES += -DRELEASE
+DEFINES += -DNDEBUG
 ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -m32 -O2 -Wall -W -Wextra -Wpedantic
 ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m32 -O2 -Wall -W -Wextra -Wpedantic
-ALL_LDFLAGS += $(LDFLAGS) -Llib -L/usr/lib32 -m32 -s
-
-else ifeq ($(config),release_win64)
-TARGETDIR = bin
-TARGET = $(TARGETDIR)/Release.exe
-OBJDIR = obj/Win64/Release
-DEFINES += -DRELEASE
-ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -m64 -O2 -Wall -W -Wextra -Wpedantic
-ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m64 -O2 -Wall -W -Wextra -Wpedantic
-ALL_LDFLAGS += $(LDFLAGS) -Llib -L/usr/lib64 -m64 -mwindows -s
-
-else ifeq ($(config),release_win32)
-TARGETDIR = bin
-TARGET = $(TARGETDIR)/Release.exe
-OBJDIR = obj/Win32/Release
-DEFINES += -DRELEASE
-ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -m32 -O2 -Wall -W -Wextra -Wpedantic
-ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m32 -O2 -Wall -W -Wextra -Wpedantic
-ALL_LDFLAGS += $(LDFLAGS) -Llib -L/usr/lib32 -m32 -mwindows -s
+ALL_LDFLAGS += $(LDFLAGS) -L/usr/lib32 -m32 -s
 
 endif
 
@@ -118,21 +76,21 @@ GENERATED :=
 OBJECTS :=
 
 GENERATED += $(OBJDIR)/app.o
-GENERATED += $(OBJDIR)/chat_client.o
-GENERATED += $(OBJDIR)/chat_common.o
+GENERATED += $(OBJDIR)/chat.o
 GENERATED += $(OBJDIR)/chat_server.o
+GENERATED += $(OBJDIR)/gui.o
 GENERATED += $(OBJDIR)/main.o
+GENERATED += $(OBJDIR)/messages.o
 GENERATED += $(OBJDIR)/network.o
 GENERATED += $(OBJDIR)/nuklear_common.o
-GENERATED += $(OBJDIR)/panels.o
 OBJECTS += $(OBJDIR)/app.o
-OBJECTS += $(OBJDIR)/chat_client.o
-OBJECTS += $(OBJDIR)/chat_common.o
+OBJECTS += $(OBJDIR)/chat.o
 OBJECTS += $(OBJDIR)/chat_server.o
+OBJECTS += $(OBJDIR)/gui.o
 OBJECTS += $(OBJDIR)/main.o
+OBJECTS += $(OBJDIR)/messages.o
 OBJECTS += $(OBJDIR)/network.o
 OBJECTS += $(OBJDIR)/nuklear_common.o
-OBJECTS += $(OBJDIR)/panels.o
 
 # Rules
 # #############################################
@@ -199,25 +157,25 @@ endif
 $(OBJDIR)/app.o: src/app.c
 	@echo "$(notdir $<)"
 	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
-$(OBJDIR)/chat_client.o: src/chat_client.c
-	@echo "$(notdir $<)"
-	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
-$(OBJDIR)/chat_common.o: src/chat_common.c
+$(OBJDIR)/chat.o: src/chat.c
 	@echo "$(notdir $<)"
 	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 $(OBJDIR)/chat_server.o: src/chat_server.c
 	@echo "$(notdir $<)"
 	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
+$(OBJDIR)/gui.o: src/gui.c
+	@echo "$(notdir $<)"
+	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 $(OBJDIR)/main.o: src/main.c
+	@echo "$(notdir $<)"
+	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
+$(OBJDIR)/messages.o: src/messages.c
 	@echo "$(notdir $<)"
 	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 $(OBJDIR)/network.o: src/network.c
 	@echo "$(notdir $<)"
 	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 $(OBJDIR)/nuklear_common.o: src/nuklear_common.c
-	@echo "$(notdir $<)"
-	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
-$(OBJDIR)/panels.o: src/panels.c
 	@echo "$(notdir $<)"
 	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 
